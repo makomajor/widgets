@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Lebens-Countdown</title>
+  <title>Lebens-Countdown (Ernst)</title>
   <style>
     body {
       margin: 0;
-      padding: 0;
-      font-family: 'Arial', sans-serif;
-      background: #f5f5f5;
+      padding: 20px;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background: #f8f8f8;
+      color: #333;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -17,42 +18,52 @@
       min-height: 100vh;
     }
     h1 {
-      margin-bottom: 30px;
-      color: #333;
+      margin-bottom: 20px;
+      font-size: 24px;
+      font-weight: 600;
       text-align: center;
+      color: #222;
     }
     .bar-container {
-      width: 80%;
-      background-color: #e0e0e0;
-      border-radius: 20px;
-      margin: 15px 0;
+      width: 90%;
+      background-color: #dcdcdc;
+      border-radius: 0; /* Eckig */
+      margin: 10px 0;
       overflow: hidden;
+      border: 1px solid #aaa; /* Ernsthafter Rahmen */
     }
     .bar {
-      height: 30px;
-      text-align: center;
-      color: white;
-      line-height: 30px;
-      background-color: #4caf50;
+      height: 25px;
+      text-align: right;
+      padding-right: 10px;
+      line-height: 25px;
+      background-color: #003366; /* Seriöses Dunkelblau */
+      color: #fff;
       width: 0%;
-      transition: width 0.5s ease;
       font-weight: bold;
+      font-size: 14px;
+      border-radius: 0; /* Eckig */
+      transition: width 0.5s ease;
     }
     p {
-      margin: 5px 0;
-      font-weight: bold;
+      margin: 8px 0 4px;
+      font-weight: 500;
+      font-size: 16px;
       color: #555;
+      align-self: flex-start;
+      margin-left: 5%;
     }
     footer {
-      margin-top: 40px;
-      font-size: 0.8em;
+      margin-top: 30px;
+      font-size: 0.75em;
       color: #aaa;
+      text-align: center;
     }
   </style>
 </head>
 <body>
 
-<h1>⏳ Dein persönlicher Lebens-Countdown</h1>
+<h1>⏳ Dein Lebens-Countdown</h1>
 
 <p>Verbleibende Zeit heute:</p>
 <div class="bar-container">
@@ -70,13 +81,13 @@
 </div>
 
 <footer>
-  Lebe bewusst. Genieße jeden Moment. ✨
+  Lebe bewusst. Nutze deine Zeit sinnvoll. ⏳
 </footer>
 
 <script>
 function updateBars() {
   const now = new Date();
-  const birthMonth = 6; // Juli (0-basiert: 0 = Januar)
+  const birthMonth = 6; // Juli (Monat 0-basiert)
   const birthDay = 20;
 
   // Tagesbalken
@@ -87,14 +98,12 @@ function updateBars() {
   const remainingDayPercent = 100 - (elapsedDayMs / totalDayMs * 100);
 
   // Wochenbalken
-  const dayOfWeek = (now.getDay() + 6) % 7; // Montag = 0
+  const dayOfWeek = (now.getDay() + 6) % 7; // Montag=0
   const startOfWeek = new Date(now);
   startOfWeek.setDate(now.getDate() - dayOfWeek);
   startOfWeek.setHours(0, 0, 0, 0);
-
   const endOfWeek = new Date(startOfWeek);
   endOfWeek.setDate(startOfWeek.getDate() + 7);
-
   const totalWeekMs = endOfWeek - startOfWeek;
   const elapsedWeekMs = now - startOfWeek;
   const remainingWeekPercent = 100 - (elapsedWeekMs / totalWeekMs * 100);
@@ -119,7 +128,7 @@ function updateBars() {
   document.getElementById("birthdayBar").innerText = Math.round(remainingBirthdayPercent) + "%";
 }
 
-// Initial aufrufen + regelmäßig aktualisieren
+// Initial aufrufen und alle 30 Sekunden aktualisieren
 updateBars();
 setInterval(updateBars, 30000);
 </script>
