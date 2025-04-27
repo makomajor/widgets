@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lebens-Countdown</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    h1 {
+      margin-bottom: 30px;
+      color: #333;
+      text-align: center;
+    }
+    .bar-container {
+      width: 80%;
+      background-color: #e0e0e0;
+      border-radius: 20px;
+      margin: 15px 0;
+      overflow: hidden;
+    }
+    .bar {
+      height: 30px;
+      text-align: center;
+      color: white;
+      line-height: 30px;
+      background-color: #4caf50;
+      width: 0%;
+      transition: width 0.5s ease;
+      font-weight: bold;
+    }
+    p {
+      margin: 5px 0;
+      font-weight: bold;
+      color: #555;
+    }
+    footer {
+      margin-top: 40px;
+      font-size: 0.8em;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+
+<h1>⏳ Dein persönlicher Lebens-Countdown</h1>
+
+<p>Verbleibende Zeit heute:</p>
+<div class="bar-container">
+  <div id="dayBar" class="bar">0%</div>
+</div>
+
+<p>Verbleibende Zeit diese Woche:</p>
+<div class="bar-container">
+  <div id="weekBar" class="bar">0%</div>
+</div>
+
+<p>Verbleibende Zeit bis zum nächsten Geburtstag:</p>
+<div class="bar-container">
+  <div id="birthdayBar" class="bar">0%</div>
+</div>
+
+<footer>
+  Lebe bewusst. Genieße jeden Moment. ✨
+</footer>
+
+<script>
+function updateBars() {
+  const now = new Date();
+  const birthMonth = 6; // Juli (0-basiert: 0 = Januar)
+  const birthDay = 20;
+
+  // Tagesbalken
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const totalDayMs = endOfDay - startOfDay;
+  const elapsedDayMs = now - startOfDay;
+  const remainingDayPercent = 100 - (elapsedDayMs / totalDayMs * 100);
+
+  // Wochenbalken
+  const dayOfWeek = (now.getDay() + 6) % 7; // Montag = 0
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - dayOfWeek);
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+  const totalWeekMs = endOfWeek - startOfWeek;
+  const elapsedWeekMs = now - startOfWeek;
+  const remainingWeekPercent = 100 - (elapsedWeekMs / totalWeekMs * 100);
+
+  // Geburtstagsbalken
+  let nextBirthday = new Date(now.getFullYear(), birthMonth, birthDay);
+  if (now > nextBirthday) {
+    nextBirthday.setFullYear(now.getFullYear() + 1);
+  }
+  const totalYearMs = nextBirthday - new Date(nextBirthday.getFullYear() - 1, birthMonth, birthDay);
+  const elapsedYearMs = now - new Date(nextBirthday.getFullYear() - 1, birthMonth, birthDay);
+  const remainingBirthdayPercent = 100 - (elapsedYearMs / totalYearMs * 100);
+
+  // Balken aktualisieren
+  document.getElementById("dayBar").style.width = remainingDayPercent + "%";
+  document.getElementById("dayBar").innerText = Math.round(remainingDayPercent) + "%";
+
+  document.getElementById("weekBar").style.width = remainingWeekPercent + "%";
+  document.getElementById("weekBar").innerText = Math.round(remainingWeekPercent) + "%";
+
+  document.getElementById("birthdayBar").style.width = remainingBirthdayPercent + "%";
+  document.getElementById("birthdayBar").innerText = Math.round(remainingBirthdayPercent) + "%";
+}
+
+// Initial aufrufen + regelmäßig aktualisieren
+updateBars();
+setInterval(updateBars, 30000);
+</script>
+
+</body>
+</html>
