@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>ToDo Joint Builder</title>
+  <title>ToDo Joint Builder v2</title>
   <style>
     body {
       margin: 0;
@@ -13,9 +13,8 @@
       flex-direction: column;
       align-items: center;
       padding: 20px;
-      font-size: 16px;
       min-height: 100vh;
-      transition: background 0.3s, color 0.3s;
+      overflow-x: hidden;
     }
     input, ul {
       width: 100%;
@@ -39,14 +38,12 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      transition: all 0.3s ease;
       cursor: pointer;
     }
     li.done {
       background: #cfcfcf;
-      color: #666;
       text-decoration: line-through;
-      transform: scale(0.98);
+      color: #666;
     }
     button {
       background: red;
@@ -59,91 +56,120 @@
       cursor: pointer;
     }
 
-    #jointBuilder {
+    /* JOINT ANIMATION AREA */
+    #jointArea {
       position: relative;
       width: 200px;
       height: 400px;
       margin-top: 30px;
-      background: #f0f0f0;
+      background: #f8f8f8;
       border: 2px solid #ddd;
       border-radius: 20px;
       overflow: hidden;
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-end;
-      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      align-items: flex-end;
+      justify-content: center;
     }
 
-    .part {
-      width: 80%;
-      background: transparent;
-      border-radius: 10px;
-      margin: 5px 0;
+    .filter, .pape, .grass, .joint, .smoke {
+      position: absolute;
       opacity: 0;
-      transform: scale(0.8);
-      animation: fadeIn 0.6s forwards;
     }
 
     .filter {
-      background: #bbb;
-      height: 20px;
+      width: 40px;
+      height: 15px;
+      background: #c2a679;
+      bottom: 30px;
+      border-radius: 8px;
+      animation: slideInBottom 1s forwards;
     }
 
-    .papes {
+    .pape {
+      width: 150px;
+      height: 20px;
       background: #fff8dc;
-      height: 40px;
+      bottom: 40px;
+      border-radius: 10px;
+      animation: unfoldPape 1s forwards;
     }
 
-    .gras {
-      background: #228B22;
-      height: 30px;
-    }
-
-    .grinded {
-      background: #2e8b57;
+    .grass {
+      width: 60px;
       height: 20px;
+      background: #228b22;
+      border-radius: 10px;
+      bottom: 50px;
+      animation: dropGrass 1s forwards;
     }
 
-    .filled {
-      background: #7cfc00;
+    .joint {
+      width: 80px;
       height: 30px;
-    }
-
-    .rolled {
       background: #d2b48c;
-      height: 50px;
-      border-radius: 25px;
+      border-radius: 20px;
+      bottom: 60px;
+      animation: rollJoint 1.5s forwards;
     }
 
-    @keyframes fadeIn {
+    .smoke {
+      width: 20px;
+      height: 20px;
+      background: rgba(200,200,200,0.6);
+      border-radius: 50%;
+      top: 20px;
+      animation: smokeRise 3s infinite;
+    }
+
+    @keyframes slideInBottom {
       to {
+        bottom: 30px;
         opacity: 1;
-        transform: scale(1);
       }
     }
 
-    /* Dark Mode */
-    @media (prefers-color-scheme: dark) {
-      body {
-        background: #111;
-        color: #eee;
+    @keyframes unfoldPape {
+      to {
+        bottom: 40px;
+        opacity: 1;
+        transform: scaleX(1);
       }
-      li {
-        background: #333;
+    }
+
+    @keyframes dropGrass {
+      0% {
+        bottom: 200px;
+        opacity: 0;
       }
-      li.done {
-        background: #555;
-        color: #aaa;
+      100% {
+        bottom: 50px;
+        opacity: 1;
       }
-      input {
-        background: #222;
-        color: #eee;
-        border: 1px solid #444;
+    }
+
+    @keyframes rollJoint {
+      0% {
+        transform: scaleX(0.2);
+        opacity: 0;
       }
-      #jointBuilder {
-        background: #222;
-        border: 2px solid #444;
+      100% {
+        transform: scaleX(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes smokeRise {
+      0% {
+        transform: translateY(0px) scale(1);
+        opacity: 0.8;
+      }
+      50% {
+        transform: translateY(-30px) scale(1.2);
+        opacity: 0.5;
+      }
+      100% {
+        transform: translateY(-60px) scale(1.5);
+        opacity: 0;
       }
     }
   </style>
@@ -152,12 +178,12 @@
   <input id="todoInput" type="text" placeholder="Neue Aufgabe..." />
   <ul id="todoList"></ul>
 
-  <div id="jointBuilder"></div>
+  <div id="jointArea"></div>
 
   <script>
     const input = document.getElementById('todoInput');
     const list = document.getElementById('todoList');
-    const jointBuilder = document.getElementById('jointBuilder');
+    const jointArea = document.getElementById('jointArea');
 
     const todos = JSON.parse(localStorage.getItem('todos')) || [];
 
@@ -170,7 +196,7 @@
         });
       });
       localStorage.setItem('todos', JSON.stringify(todoArray));
-      updateJointVisual();
+      updateJoint();
     }
 
     function addTodo(text, done = false) {
@@ -209,25 +235,24 @@
       }
     });
 
-    function updateJointVisual() {
+    function updateJoint() {
       const doneCount = list.querySelectorAll('li.done').length;
-      jointBuilder.innerHTML = ''; // Reset Visual
+      jointArea.innerHTML = ''; // reset
 
-      if (doneCount >= 1) addPart('filter');
-      if (doneCount >= 2) addPart('papes');
-      if (doneCount >= 3) addPart('gras');
-      if (doneCount >= 5) addPart('grinded');
-      if (doneCount >= 7) addPart('filled');
-      if (doneCount >= 9) addPart('rolled');
+      if (doneCount >= 1) createPart('filter');
+      if (doneCount >= 2) createPart('pape');
+      if (doneCount >= 4) createPart('grass');
+      if (doneCount >= 7) createPart('joint');
+      if (doneCount === 10) createPart('smoke');
     }
 
-    function addPart(type) {
-      const part = document.createElement('div');
-      part.className = 'part ' + type;
-      jointBuilder.appendChild(part);
+    function createPart(type) {
+      const div = document.createElement('div');
+      div.className = type;
+      jointArea.appendChild(div);
     }
 
-    updateJointVisual();
+    updateJoint();
   </script>
 </body>
 </html>
