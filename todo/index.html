@@ -1,92 +1,15 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <title>ToDo Widget</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      background: #fff;
-      color: #000;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-      font-size: 16px;
-      min-height: 100vh;
-      transition: background 0.3s, color 0.3s;
-    }
-    input, ul {
-      width: 100%;
-      max-width: 300px;
-    }
-    input {
-      padding: 8px;
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    li {
-      background: #eee;
-      margin-bottom: 6px;
-      padding: 8px;
-      border-radius: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-    li.done {
-      background: #cfcfcf;
-      color: #666;
-      text-decoration: line-through;
-      transform: scale(0.98);
-    }
-    button {
-      background: red;
-      border: none;
-      color: white;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      font-size: 12px;
-      cursor: pointer;
-    }
-
-    /* Dark mode automatisch wenn Notion dunkel ist */
-    @media (prefers-color-scheme: dark) {
-      body {
-        background: #111;
-        color: #eee;
-      }
-      li {
-        background: #333;
-      }
-      li.done {
-        background: #555;
-        color: #aaa;
-      }
-      input {
-        background: #222;
-        color: #eee;
-        border: 1px solid #444;
-      }
-    }
-  </style>
-</head>
 <body>
   <input id="todoInput" type="text" placeholder="Neue Aufgabe..." />
   <ul id="todoList"></ul>
 
+  <div id="jointVisual" style="margin-top:20px;">
+    <img id="jointImage" src="" style="max-width: 300px; display:none;" />
+  </div>
+
   <script>
     const input = document.getElementById('todoInput');
     const list = document.getElementById('todoList');
+    const jointImage = document.getElementById('jointImage');
 
     const todos = JSON.parse(localStorage.getItem('todos')) || [];
 
@@ -99,6 +22,7 @@
         });
       });
       localStorage.setItem('todos', JSON.stringify(todoArray));
+      updateJointVisual();
     }
 
     function addTodo(text, done = false) {
@@ -136,6 +60,18 @@
         saveTodos();
       }
     });
+
+    function updateJointVisual() {
+      const doneCount = list.querySelectorAll('li.done').length;
+      let step = Math.min(doneCount, 10); // Maximal Schritt 10
+      if (step > 0) {
+        jointImage.style.display = 'block';
+        jointImage.src = `joint_step${step}.gif`;
+      } else {
+        jointImage.style.display = 'none';
+      }
+    }
+
+    updateJointVisual();
   </script>
 </body>
-</html>
