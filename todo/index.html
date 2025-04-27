@@ -7,29 +7,25 @@
     body {
       margin: 0;
       font-family: sans-serif;
-      background: #f5f5f5;
-      height: 100vh;
+      background: #fff;
+      color: #000;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-    }
-    .todo-container {
-      background: white;
       padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      width: 300px;
+      font-size: 16px;
+      min-height: 100vh;
+      transition: background 0.3s, color 0.3s;
     }
-    .todo-container h1 {
-      font-size: 1.5em;
-      margin-bottom: 10px;
-    }
-    input[type="text"] {
+    input, ul {
       width: 100%;
+      max-width: 300px;
+    }
+    input {
       padding: 8px;
       margin-bottom: 10px;
       border: 1px solid #ccc;
-      border-radius: 8px;
+      border-radius: 6px;
     }
     ul {
       list-style: none;
@@ -37,12 +33,20 @@
     }
     li {
       background: #eee;
-      margin-bottom: 5px;
+      margin-bottom: 6px;
       padding: 8px;
-      border-radius: 8px;
+      border-radius: 6px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    li.done {
+      background: #cfcfcf;
+      color: #666;
+      text-decoration: line-through;
+      transform: scale(0.98);
     }
     button {
       background: red;
@@ -54,28 +58,82 @@
       font-size: 12px;
       cursor: pointer;
     }
+
+    /* Dark mode automatisch wenn Notion dunkel ist */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #111;
+        color: #eee;
+      }
+      li {
+        background: #333;
+      }
+      li.done {
+        background: #555;
+        color: #aaa;
+      }
+      input {
+        background: #222;
+        color: #eee;
+        border: 1px solid #444;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="todo-container">
-    <h1>Meine Aufgaben</h1>
-    <input id="todoInput" type="text" placeholder="Neue Aufgabe..." />
-    <ul id="todoList"></ul>
-  </div>
+  <input id="todoInput" type="text" placeholder="Neue Aufgabe..." />
+  <ul id="todoList"></ul>
 
   <script>
     const input = document.getElementById('todoInput');
     const list = document.getElementById('todoList');
 
+    const todos = JSON.parse(localStorage.getItem('todos')) || [];
+
+    function saveTodos() {
+      const todoArray = [];
+      list.querySelectorAll('li').forEach(li => {
+        todoArray.push({
+          text: li.querySelector('span').textContent,
+          done: li.classList.contains('done')
+        });
+      });
+      localStorage.setItem('todos', JSON.stringify(todoArray));
+    }
+
+    function addTodo(text, done = false) {
+      const li = document.createElement('li');
+      const span = document.createElement('span');
+      span.textContent = text;
+      li.appendChild(span);
+
+      const btn = document.createElement('button');
+      btn.textContent = 'x';
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        li.remove();
+        saveTodos();
+      };
+      li.appendChild(btn);
+
+      li.onclick = (e) => {
+        if (e.target.tagName !== 'BUTTON') {
+          li.classList.toggle('done');
+          saveTodos();
+        }
+      };
+
+      if (done) li.classList.add('done');
+      list.appendChild(li);
+    }
+
+    todos.forEach(todo => addTodo(todo.text, todo.done));
+
     input.addEventListener('keypress', function(e) {
       if (e.key === 'Enter' && input.value.trim() !== '') {
-        const li = document.createElement('li');
-        li.innerHTML = input.value + ' <button>x</button>';
-        li.querySelector('button').addEventListener('click', function() {
-          li.remove();
-        });
-        list.appendChild(li);
+        addTodo(input.value.trim());
         input.value = '';
+        saveTodos();
       }
     });
   </script>
