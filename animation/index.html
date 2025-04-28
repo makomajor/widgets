@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Gizeh Tipp & Papier Animation</title>
+  <style>
+    body {
+      background: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .sprite {
+      width: 128px; /* Breite eines einzelnen Frames */
+      height: 128px; /* Höhe eines Frames */
+      background: url('spritesheet-gizeh.png') 0 0 no-repeat;
+      animation: animieren 2s steps(4) infinite;
+      image-rendering: pixelated; /* Falls es pixelartig ist */
+    }
+
+    @keyframes animieren {
+      100% {
+        background-position: -512px 0; /* 4 Frames je 128px => 512px */
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="sprite"></div>
+
+</body>
+</html>
