@@ -308,6 +308,7 @@
   const weekRange = document.getElementById('weekRange');
   const clearWeekBtn = document.getElementById('clearWeek');
 
+  let lastAddedTask = null;
   let lastDeletedWeek = null;
   let weekOffset = 0;
   let draggedTask = null;
@@ -496,7 +497,9 @@
 
       selectedDays.forEach(day => {
         if (!weekTasks[day]) weekTasks[day] = [];
-        weekTasks[day].push({ text, done: false });
+        const taskObj = { text, done: false };
+        weekTasks[day].push(taskObj);
+        lastAddedTask = { weekKey, day, index: weekTasks[day].length - 1 };
       });
 
       tasksByWeek[weekKey] = weekTasks;
@@ -525,15 +528,17 @@
   });
 
   document.getElementById('undoBtn').addEventListener('click', () => {
-    if (lastDeletedWeek) {
-      const monday = getMondayOfWeek(weekOffset);
-      const weekKey = getWeekKey(monday);
-      tasksByWeek[weekKey] = lastDeletedWeek;
-      saveTasks();
-      renderWeek();
-      lastDeletedWeek = null;
+    if (lastAddedTask) {
+      const { weekKey, day, index } = lastAddedTask;
+      const tasks = tasksByWeek[weekKey]?.[day];
+      if (tasks && tasks.length > index) {
+        tasks.splice(index, 1);
+        saveTasks();
+        renderWeek();
+        lastAddedTask = null;
+      }
     } else {
-      alert("Nichts zum Wiederherstellen.");
+      alert("Kein letzter Task zum Rückgängig machen.");
     }
   });
 
