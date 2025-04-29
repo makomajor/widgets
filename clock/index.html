@@ -165,7 +165,7 @@
 </div>
 
 <form id="taskForm" class="task-form">
-  <input type="text" id="taskInput" placeholder="Neue Aufgabe" required />
+  <textarea id="taskInput" placeholder="Neue Aufgabe" required rows="2" style="width: 90%; max-width: 400px;"></textarea>
   <div class="checkboxes" id="dayCheckboxes"></div>
   <button type="submit">Hinzufügen</button>
 </form>
@@ -251,7 +251,7 @@
 
         const taskText = document.createElement('span');
         taskText.className = 'task-text';
-        taskText.textContent = task.text;
+        taskText.innerHTML = task.text.replace(/\n/g, "<br>");
 
         if (task.done) li.classList.add('done');
 
