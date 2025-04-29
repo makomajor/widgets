@@ -143,12 +143,22 @@
       color: #333;
       border: none;
       cursor: pointer;
-    }
 
     body.dark-mode #clearWeek {
       color: #ddd;
     }
 
+    #undoBtn {
+      padding: 8px 12px;
+      font-size: 18px;
+      background: transparent;
+      border: none;
+      color: #333;
+      cursor: pointer;
+    }
+    body.dark-mode #undoBtn {
+      color: #ddd;
+    }
     .checkboxes {
       display: flex;
       flex-wrap: wrap;
@@ -273,8 +283,8 @@
 
 <div class="form-container">
   <input type="text" id="taskInput" placeholder="Neue Aufgabe" required />
-  <button id="clearWeek" title="Alle Aufgaben löschen">🗑️</button>
   <button id="undoBtn" title="Letzte Löschung rückgängig machen">↩️</button>
+  <button id="clearWeek" title="Alle Aufgaben löschen">🗑️</button>
 </div>
 
 <div class="checkboxes" id="dayCheckboxes"></div>
