@@ -22,7 +22,6 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 15px;
     }
 
     .nav-buttons {
@@ -200,7 +199,7 @@
 <body>
 
 <div class="header">
-  <button id="darkModeToggle">Dark Mode</button>
+  <button id="darkModeToggle">🌙</button>
   <div class="nav-buttons">
     <button id="prevWeekBtn">&lt;</button>
     <button id="nextWeekBtn">&gt;</button>
@@ -265,6 +264,9 @@
   }
 
   function renderWeek() {
+    dayDiv.appendChild(dateEl);
+    dayDiv.appendChild(title);
+    dayDiv.appendChild(ul);
     const monday = getMondayOfWeek(weekOffset);
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
@@ -366,6 +368,28 @@
       dayDiv.appendChild(ul);
       weekDiv.appendChild(dayDiv);
     });
+
+        // Drop auf den Tages-Container (wenn außerhalb von Task fallen gelassen)
+    dayDiv.addEventListener('dragover', e => {
+      e.preventDefault();
+    });
+
+    dayDiv.addEventListener('drop', e => {
+      e.preventDefault();
+      if (draggedItem) {
+        const dropDay = dayDiv.dataset.day;
+
+        // Nur verschieben, wenn Zieltag existiert
+        if (!weekTasks[dropDay]) weekTasks[dropDay] = [];
+
+        const fromTasks = weekTasks[draggedItem.day];
+        const [movedTask] = fromTasks.splice(draggedItem.index, 1);
+        weekTasks[dropDay].push(movedTask);
+
+        saveTasks();
+        renderWeek();
+      }
+    });
   }
 
   taskInput.addEventListener('keydown', e => {
@@ -405,6 +429,8 @@
 
   document.getElementById('darkModeToggle').addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    document.getElementById('darkModeToggle').textContent = isDark ? "☀️" : "🌙";
   });
 
   clearWeekBtn.addEventListener('click', () => {
