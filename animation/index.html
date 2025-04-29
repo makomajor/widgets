@@ -1,128 +1,190 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <title>Wochenplaner</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        h1 {
-            text-align: center;
-        }
-        .week {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-        }
-        .day {
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            padding: 10px;
-            width: 13%;
-            box-sizing: border-box;
-            min-height: 200px;
-        }
-        .day h2 {
-            font-size: 16px;
-            margin-top: 0;
-        }
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        li {
-            margin: 5px 0;
-            cursor: pointer;
-        }
-        li.done {
-            text-decoration: line-through;
-            color: gray;
-        }
-        form {
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        input, select, button {
-            padding: 5px;
-            margin: 5px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Wochenplaner</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .week {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .day {
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      width: 13%;
+      min-width: 120px;
+      box-sizing: border-box;
+    }
+    .day h2 {
+      font-size: 14px;
+      margin: 0;
+      text-align: center;
+    }
+    .day h3 {
+      font-size: 16px;
+      margin-top: 5px;
+      text-align: center;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+      margin-top: 10px;
+    }
+    li {
+      margin: 5px 0;
+      cursor: pointer;
+      word-break: break-word;
+    }
+    li.done {
+      text-decoration: line-through;
+      color: gray;
+    }
+    form {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    input, select, button {
+      padding: 8px;
+      margin: 5px;
+      font-size: 14px;
+    }
+    select {
+      min-width: 150px;
+    }
+    @media (max-width: 768px) {
+      .day {
+        width: 45%;
+      }
+    }
+    @media (max-width: 480px) {
+      .day {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
 
 <h1>Mein Wochenplaner</h1>
 
 <form id="taskForm">
-    <input type="text" id="taskInput" placeholder="Neue Aufgabe" required>
-    <select id="daySelect"></select>
-    <button type="submit">Hinzufügen</button>
+  <input type="text" id="taskInput" placeholder="Neue Aufgabe" required>
+  <select id="daySelect" multiple size="7"></select>
+  <br>
+  <button type="submit">Hinzufügen</button>
 </form>
 
 <div class="week" id="week"></div>
 
 <script>
-    const days = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
-    const weekDiv = document.getElementById('week');
-    const daySelect = document.getElementById('daySelect');
-    const today = new Date();
-    const monday = new Date(today.setDate(today.getDate() - today.getDay() + 1));
+  const days = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
+  const weekDiv = document.getElementById('week');
+  const daySelect = document.getElementById('daySelect');
+  const today = new Date();
+  const monday = new Date(today.setDate(today.getDate() - today.getDay() + 1));
 
-    function formatDate(date) {
-        return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+  let tasks = JSON.parse(localStorage.getItem('tasks')) || {};
+
+  function formatDate(date) {
+    return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+  }
+
+  function generateWeek() {
+    for (let i = 0; i < 7; i++) {
+      let dayDate = new Date(monday);
+      dayDate.setDate(monday.getDate() + i);
+
+      const dayDiv = document.createElement('div');
+      dayDiv.classList.add('day');
+      dayDiv.id = days[i];
+
+      const dateTitle = document.createElement('h2');
+      dateTitle.textContent = formatDate(dayDate);
+
+      const dayTitle = document.createElement('h3');
+      dayTitle.textContent = days[i];
+
+      const taskList = document.createElement('ul');
+
+      dayDiv.appendChild(dateTitle);
+      dayDiv.appendChild(dayTitle);
+      dayDiv.appendChild(taskList);
+      weekDiv.appendChild(dayDiv);
+
+      // Auswahlmenü
+      const option = document.createElement('option');
+      option.value = days[i];
+      option.textContent = days[i];
+      daySelect.appendChild(option);
     }
+  }
 
-    function generateWeek() {
-        for (let i = 0; i < 7; i++) {
-            let dayDate = new Date(monday);
-            dayDate.setDate(monday.getDate() + i);
+  function saveTasks() {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  }
 
-            // Erstelle ein Div für jeden Tag
-            const dayDiv = document.createElement('div');
-            dayDiv.classList.add('day');
-            dayDiv.id = days[i];
-
-            const dayTitle = document.createElement('h2');
-            dayTitle.textContent = `${days[i]} (${formatDate(dayDate)})`;
-
-            const taskList = document.createElement('ul');
-
-            dayDiv.appendChild(dayTitle);
-            dayDiv.appendChild(taskList);
-            weekDiv.appendChild(dayDiv);
-
-            // Option für das Auswahlmenü
-            const option = document.createElement('option');
-            option.value = days[i];
-            option.textContent = days[i];
-            daySelect.appendChild(option);
-        }
+  function loadTasks() {
+    for (const [day, dayTasks] of Object.entries(tasks)) {
+      const ul = document.querySelector(`#${day} ul`);
+      dayTasks.forEach(task => {
+        const taskItem = document.createElement('li');
+        taskItem.textContent = task.text;
+        if (task.done) taskItem.classList.add('done');
+        taskItem.addEventListener('click', () => {
+          taskItem.classList.toggle('done');
+          task.done = !task.done;
+          saveTasks();
+        });
+        ul.appendChild(taskItem);
+      });
     }
+  }
 
-    generateWeek();
+  document.getElementById('taskForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const taskText = document.getElementById('taskInput').value.trim();
+    const selectedOptions = Array.from(daySelect.selectedOptions).map(option => option.value);
 
-    document.getElementById('taskForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const taskText = document.getElementById('taskInput').value.trim();
-        const day = daySelect.value;
+    if (taskText && selectedOptions.length) {
+      selectedOptions.forEach(day => {
+        if (!tasks[day]) tasks[day] = [];
+        const task = { text: taskText, done: false };
 
-        if (taskText !== "") {
-            const taskItem = document.createElement('li');
-            taskItem.textContent = taskText;
+        tasks[day].push(task);
 
-            // Klick auf Aufgabe markiert als erledigt
-            taskItem.addEventListener('click', function() {
-                taskItem.classList.toggle('done');
-            });
+        const ul = document.querySelector(`#${day} ul`);
+        const taskItem = document.createElement('li');
+        taskItem.textContent = taskText;
 
-            document.querySelector(`#${day} ul`).appendChild(taskItem);
+        taskItem.addEventListener('click', () => {
+          taskItem.classList.toggle('done');
+          task.done = !task.done;
+          saveTasks();
+        });
 
-            // Eingabefelder zurücksetzen
-            document.getElementById('taskInput').value = "";
-            daySelect.value = days[0];
-        }
-    });
+        ul.appendChild(taskItem);
+      });
+
+      saveTasks();
+
+      // Eingabefelder leeren
+      document.getElementById('taskInput').value = "";
+      daySelect.selectedIndex = -1;
+    }
+  });
+
+  generateWeek();
+  loadTasks();
 </script>
 
 </body>
