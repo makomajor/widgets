@@ -225,12 +225,10 @@
 <form id="taskForm">
   <div class="form-container">
     <input type="text" id="taskInput" placeholder="Neue Aufgabe" required />
-    <button id="clearWeek" type="button">Alle löschen</button>
+    <button id="clearWeek" type="button" title="Alle Aufgaben löschen">🗑️</button>
   </div>
   <div class="checkboxes" id="dayCheckboxes"></div>
-  <button type="submit">Hinzufügen</button>
 </form>
-
 <div class="week" id="week"></div>
 
 <script>
@@ -342,17 +340,37 @@
         li.appendChild(delBtn);
         ul.appendChild(li);
 
-        // Drag events
-        li.addEventListener('dragstart', e => {
-          draggedTask = task;
-          draggedFrom = { day, index };
-          li.classList.add('dragging');
-        });
-        li.addEventListener('dragend', () => {
-          draggedTask = null;
-          draggedFrom = null;
-          li.classList.remove('dragging');
-        });
+      // Touch Events für Mobile Drag
+      li.addEventListener('touchstart', e => {
+        draggedTask = task;
+        draggedFrom = { day, index };
+      }, { passive: true });
+      
+      li.addEventListener('touchmove', e => {
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        const targetDay = target.closest('.day');
+        document.querySelectorAll('.day').forEach(d => d.classList.remove('dragover'));
+        if (targetDay) targetDay.classList.add('dragover');
+      }, { passive: true });
+      
+      li.addEventListener('touchend', e => {
+        const touch = e.changedTouches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        const targetDay = target.closest('.day');
+        document.querySelectorAll('.day').forEach(d => d.classList.remove('dragover'));
+      
+        if (targetDay && draggedTask && draggedFrom) {
+          const targetDayName = targetDay.dataset.day;
+          const fromTasks = weekTasks[draggedFrom.day];
+          fromTasks.splice(draggedFrom.index, 1);
+          if (!weekTasks[targetDayName]) weekTasks[targetDayName] = [];
+          weekTasks[targetDayName].push(draggedTask);
+          saveTasks();
+          renderWeek();
+        }
+        draggedTask = null;
+        draggedFrom = null;
       });
 
       // Drop zone events
@@ -384,20 +402,30 @@
     });
   }
 
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    const text = taskInput.value.trim();
-    const selectedDays = Array.from(checkboxesDiv.querySelectorAll('input:checked')).map(cb => cb.value);
-    if (!text || selectedDays.length === 0) return;
-
-    const monday = getMondayOfWeek(weekOffset);
-    const weekKey = getWeekKey(monday);
-    const weekTasks = tasksByWeek[weekKey] || {};
-
-    selectedDays.forEach(day => {
-      if (!weekTasks[day]) weekTasks[day] = [];
-      weekTasks[day].push({ text, done: false });
-    });
+  taskInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const text = taskInput.value.trim();
+      const selectedDays = Array.from(checkboxesDiv.querySelectorAll('input:checked')).map(cb => cb.value);
+      if (!text || selectedDays.length === 0) return;
+  
+      const monday = getMondayOfWeek(weekOffset);
+      const weekKey = getWeekKey(monday);
+      const weekTasks = tasksByWeek[weekKey] || {};
+  
+      selectedDays.forEach(day => {
+        if (!weekTasks[day]) weekTasks[day] = [];
+        weekTasks[day].push({ text, done: false });
+      });
+  
+      tasksByWeek[weekKey] = weekTasks;
+      saveTasks();
+      renderWeek();
+  
+      taskInput.value = '';
+      checkboxesDiv.querySelectorAll('input').forEach(cb => cb.checked = false);
+    }
+  });
 
     tasksByWeek[weekKey] = weekTasks;
     saveTasks();
