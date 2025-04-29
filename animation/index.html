@@ -1,74 +1,112 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Wochenplaner</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
     }
+
     h1 {
       text-align: center;
     }
-    .week {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-    }
-    .day {
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      padding: 10px;
-      width: 13%;
-      min-width: 120px;
-      box-sizing: border-box;
-    }
-    .day h2 {
-      font-size: 14px;
-      margin: 0;
-      text-align: center;
-    }
-    .day h3 {
-      font-size: 16px;
-      margin-top: 5px;
-      text-align: center;
-    }
-    ul {
-      list-style-type: none;
-      padding: 0;
-      margin-top: 10px;
-    }
-    li {
-      margin: 5px 0;
-      cursor: pointer;
-      word-break: break-word;
-    }
-    li.done {
-      text-decoration: line-through;
-      color: gray;
-    }
+
     form {
       margin-bottom: 20px;
       text-align: center;
     }
-    input, select, button {
-      padding: 8px;
-      margin: 5px;
+
+    .task-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    input[type="text"], button {
+      padding: 10px;
+      font-size: 16px;
+      width: 90%;
+      max-width: 400px;
+    }
+
+    .checkboxes {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .checkboxes label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .week {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .day {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      width: 100%;
+      max-width: 250px;
+      box-sizing: border-box;
+      background: #f9f9f9;
+    }
+
+    .day h3 {
+      margin: 5px 0 0;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .day h2 {
       font-size: 14px;
+      margin: 0;
+      color: #555;
+      text-align: center;
     }
-    select {
-      min-width: 150px;
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 10px;
     }
-    @media (max-width: 768px) {
+
+    li {
+      background: white;
+      margin-bottom: 5px;
+      padding: 8px;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      word-break: break-word;
+    }
+
+    li.done {
+      text-decoration: line-through;
+      color: gray;
+      background: #eee;
+    }
+
+    @media (min-width: 600px) {
       .day {
         width: 45%;
       }
     }
-    @media (max-width: 480px) {
+
+    @media (min-width: 900px) {
       .day {
-        width: 100%;
+        width: 30%;
       }
     }
   </style>
@@ -77,10 +115,9 @@
 
 <h1>Mein Wochenplaner</h1>
 
-<form id="taskForm">
-  <input type="text" id="taskInput" placeholder="Neue Aufgabe" required>
-  <select id="daySelect" multiple size="7"></select>
-  <br>
+<form id="taskForm" class="task-form">
+  <input type="text" id="taskInput" placeholder="Neue Aufgabe" required />
+  <div class="checkboxes" id="dayCheckboxes"></div>
   <button type="submit">Hinzufügen</button>
 </form>
 
@@ -89,7 +126,10 @@
 <script>
   const days = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
   const weekDiv = document.getElementById('week');
-  const daySelect = document.getElementById('daySelect');
+  const checkboxesDiv = document.getElementById('dayCheckboxes');
+  const taskInput = document.getElementById('taskInput');
+  const form = document.getElementById('taskForm');
+
   const today = new Date();
   const monday = new Date(today.setDate(today.getDate() - today.getDay() + 1));
 
@@ -99,92 +139,92 @@
     return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
   }
 
-  function generateWeek() {
+  function createCheckboxes() {
+    days.forEach(day => {
+      const label = document.createElement('label');
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.value = day;
+      label.appendChild(checkbox);
+      label.appendChild(document.createTextNode(day));
+      checkboxesDiv.appendChild(label);
+    });
+  }
+
+  function createWeekView() {
     for (let i = 0; i < 7; i++) {
-      let dayDate = new Date(monday);
-      dayDate.setDate(monday.getDate() + i);
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + i);
+
+      const dayName = days[i];
+      const dateStr = formatDate(date);
 
       const dayDiv = document.createElement('div');
       dayDiv.classList.add('day');
-      dayDiv.id = days[i];
+      dayDiv.id = dayName;
 
-      const dateTitle = document.createElement('h2');
-      dateTitle.textContent = formatDate(dayDate);
+      const dateEl = document.createElement('h2');
+      dateEl.textContent = dateStr;
 
-      const dayTitle = document.createElement('h3');
-      dayTitle.textContent = days[i];
+      const title = document.createElement('h3');
+      title.textContent = dayName;
 
-      const taskList = document.createElement('ul');
+      const ul = document.createElement('ul');
 
-      dayDiv.appendChild(dateTitle);
-      dayDiv.appendChild(dayTitle);
-      dayDiv.appendChild(taskList);
+      dayDiv.appendChild(dateEl);
+      dayDiv.appendChild(title);
+      dayDiv.appendChild(ul);
+
       weekDiv.appendChild(dayDiv);
-
-      // Auswahlmenü
-      const option = document.createElement('option');
-      option.value = days[i];
-      option.textContent = days[i];
-      daySelect.appendChild(option);
     }
+  }
+
+  function renderTasks() {
+    days.forEach(day => {
+      const ul = document.querySelector(`#${day} ul`);
+      ul.innerHTML = '';
+      if (tasks[day]) {
+        tasks[day].forEach((task, index) => {
+          const li = document.createElement('li');
+          li.textContent = task.text;
+          if (task.done) li.classList.add('done');
+          li.addEventListener('click', () => {
+            task.done = !task.done;
+            li.classList.toggle('done');
+            saveTasks();
+          });
+          ul.appendChild(li);
+        });
+      }
+    });
   }
 
   function saveTasks() {
     localStorage.setItem('tasks', JSON.stringify(tasks));
   }
 
-  function loadTasks() {
-    for (const [day, dayTasks] of Object.entries(tasks)) {
-      const ul = document.querySelector(`#${day} ul`);
-      dayTasks.forEach(task => {
-        const taskItem = document.createElement('li');
-        taskItem.textContent = task.text;
-        if (task.done) taskItem.classList.add('done');
-        taskItem.addEventListener('click', () => {
-          taskItem.classList.toggle('done');
-          task.done = !task.done;
-          saveTasks();
-        });
-        ul.appendChild(taskItem);
-      });
-    }
-  }
-
-  document.getElementById('taskForm').addEventListener('submit', function(e) {
+  form.addEventListener('submit', e => {
     e.preventDefault();
-    const taskText = document.getElementById('taskInput').value.trim();
-    const selectedOptions = Array.from(daySelect.selectedOptions).map(option => option.value);
+    const text = taskInput.value.trim();
+    const selectedDays = Array.from(checkboxesDiv.querySelectorAll('input:checked')).map(cb => cb.value);
+    if (!text || selectedDays.length === 0) return;
 
-    if (taskText && selectedOptions.length) {
-      selectedOptions.forEach(day => {
-        if (!tasks[day]) tasks[day] = [];
-        const task = { text: taskText, done: false };
+    selectedDays.forEach(day => {
+      if (!tasks[day]) tasks[day] = [];
+      tasks[day].push({ text, done: false });
+    });
 
-        tasks[day].push(task);
+    saveTasks();
+    renderTasks();
 
-        const ul = document.querySelector(`#${day} ul`);
-        const taskItem = document.createElement('li');
-        taskItem.textContent = taskText;
-
-        taskItem.addEventListener('click', () => {
-          taskItem.classList.toggle('done');
-          task.done = !task.done;
-          saveTasks();
-        });
-
-        ul.appendChild(taskItem);
-      });
-
-      saveTasks();
-
-      // Eingabefelder leeren
-      document.getElementById('taskInput').value = "";
-      daySelect.selectedIndex = -1;
-    }
+    // Zurücksetzen
+    taskInput.value = '';
+    checkboxesDiv.querySelectorAll('input').forEach(cb => cb.checked = false);
   });
 
-  generateWeek();
-  loadTasks();
+  createCheckboxes();
+  createWeekView();
+  renderTasks();
 </script>
 
 </body>
