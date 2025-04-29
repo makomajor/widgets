@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Wochenplaner</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    .title-container {
+      text-align: center;
+      position: relative;
+    }
+
+    h1 {
+      margin-bottom: 5px;
+      font-size: 24px;
+    }
+
+    #weekRange {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    .nav-buttons {
+      position: absolute;
+      top: 0;
+      right: 0;
+    }
+
+    .nav-buttons button {
+      font-size: 16px;
+      padding: 4px 10px;
+      margin-left: 5px;
+      cursor: pointer;
+    }
+
+    form {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .task-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    input[type="text"], button {
+      padding: 10px;
+      font-size: 16px;
+      width: 90%;
+      max-width: 400px;
+    }
+
+    .checkboxes {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .checkboxes label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .week {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .day {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      width: 100%;
+      max-width: 250px;
+      box-sizing: border-box;
+      background: #f9f9f9;
+    }
+
+    .day h3 {
+      margin: 5px 0 0;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .day h2 {
+      font-size: 14px;
+      margin: 0;
+      color: #555;
+      text-align: center;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 10px;
+    }
+
+    li {
+      background: white;
+      margin-bottom: 5px;
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      word-break: break-word;
+      white-space: normal;
+    }
+    
+    li span {
+      flex-grow: 1;
+      overflow-wrap: break-word;
+    }
+    
+    li.done {
+      text-decoration: line-through;
+      color: gray;
+      background: #eee;
+    }
+    
+    .delete-btn {
+      background: none;
+      border: none;
+      color: red;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      margin-left: 10px;
+      flex-shrink: 0;
+    }
+    
+    @media (min-width: 600px) {
+      .day {
+        width: 45%;
+      }
+    }
+
+    @media (min-width: 900px) {
+      .day {
+        width: 30%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="title-container">
+  <h1>Mein Wochenplaner</h1>
+  <div id="weekRange">Woche vom ...</div>
+  <div class="nav-buttons">
+    <button id="prevWeekBtn">&lt;</button>
+    <button id="nextWeekBtn">&gt;</button>
+  </div>
+</div>
+
+<form id="taskForm" class="task-form">
+  <input type="text" id="taskInput" placeholder="Neue Aufgabe" required />
+  <div class="checkboxes" id="dayCheckboxes"></div>
+  <button type="submit">Hinzufügen</button>
+</form>
+
+<div class="week" id="week"></div>
+
+<script>
+  const days = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
+  const weekDiv = document.getElementById('week');
+  const checkboxesDiv = document.getElementById('dayCheckboxes');
+  const taskInput = document.getElementById('taskInput');
+  const form = document.getElementById('taskForm');
+  const weekRange = document.getElementById('weekRange');
+
+  let weekOffset = 0;
+  let tasksByWeek = JSON.parse(localStorage.getItem('weeklyTasks')) || {};
+
+  function getMondayOfWeek(offset = 0) {
+    const today = new Date();
+    const monday = new Date(today.setDate(today.getDate() - today.getDay() + 1 + offset * 7));
+    monday.setHours(0,0,0,0);
+    return monday;
+  }
+
+  function formatDate(date) {
+    return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+  }
+
+  function getWeekKey(monday) {
+    return monday.toISOString().split('T')[0];
+  }
+
+  function saveTasks() {
+    localStorage.setItem('weeklyTasks', JSON.stringify(tasksByWeek));
+  }
+
+  function createCheckboxes() {
+    checkboxesDiv.innerHTML = '';
+    days.forEach(day => {
+      const label = document.createElement('label');
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.value = day;
+      label.appendChild(checkbox);
+      label.appendChild(document.createTextNode(day));
+      checkboxesDiv.appendChild(label);
+    });
+  }
+
+  function renderWeek() {
+    const monday = getMondayOfWeek(weekOffset);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+
+    const weekKey = getWeekKey(monday);
+    if (!tasksByWeek[weekKey]) tasksByWeek[weekKey] = {};
+    const weekTasks = tasksByWeek[weekKey];
+
+    weekRange.textContent = `Woche: ${formatDate(monday)} – ${formatDate(sunday)}`;
+    weekDiv.innerHTML = '';
+
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + i);
+
+      const dayName = days[i];
+      const dateStr = formatDate(date);
+      const dayTasks = weekTasks[dayName] || [];
+
+      const dayDiv = document.createElement('div');
+      dayDiv.classList.add('day');
+      dayDiv.id = dayName;
+
+      const dateEl = document.createElement('h2');
+      dateEl.textContent = dateStr;
+
+      const title = document.createElement('h3');
+      title.textContent = dayName;
+
+      const ul = document.createElement('ul');
+
+      dayTasks.forEach((task, index) => {
+        const li = document.createElement('li');
+        const span = document.createElement('span');
+        span.textContent = task.text;
+
+        if (task.done) li.classList.add('done');
+
+        span.addEventListener('click', () => {
+          task.done = !task.done;
+          li.classList.toggle('done');
+          saveTasks();
+        });
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '×';
+        delBtn.classList.add('delete-btn');
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dayTasks.splice(index, 1);
+          weekTasks[dayName] = dayTasks;
+          saveTasks();
+          renderWeek();
+        });
+
+        li.appendChild(span);
+        li.appendChild(delBtn);
+        ul.appendChild(li);
+      });
+
+      dayDiv.appendChild(dateEl);
+      dayDiv.appendChild(title);
+      dayDiv.appendChild(ul);
+      weekDiv.appendChild(dayDiv);
+    }
+  }
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const text = taskInput.value.trim();
+    const selectedDays = Array.from(checkboxesDiv.querySelectorAll('input:checked')).map(cb => cb.value);
+    if (!text || selectedDays.length === 0) return;
+
+    const monday = getMondayOfWeek(weekOffset);
+    const weekKey = getWeekKey(monday);
+    const weekTasks = tasksByWeek[weekKey] || {};
+
+    selectedDays.forEach(day => {
+      if (!weekTasks[day]) weekTasks[day] = [];
+      weekTasks[day].push({ text, done: false });
+    });
+
+    tasksByWeek[weekKey] = weekTasks;
+    saveTasks();
+    renderWeek();
+
+    taskInput.value = '';
+    checkboxesDiv.querySelectorAll('input').forEach(cb => cb.checked = false);
+  });
+
+  document.getElementById('prevWeekBtn').addEventListener('click', () => {
+    weekOffset--;
+    renderWeek();
+  });
+
+  document.getElementById('nextWeekBtn').addEventListener('click', () => {
+    weekOffset++;
+    renderWeek();
+  });
+
+  createCheckboxes();
+  renderWeek();
+</script>
+
+</body>
+</html>

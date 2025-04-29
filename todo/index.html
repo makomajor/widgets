@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>ToDo Joint Builder Realistic</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #fff;
+      color: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    input, ul {
+      width: 100%;
+      max-width: 300px;
+    }
+    input {
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background: #eee;
+      margin-bottom: 6px;
+      padding: 8px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    li.done {
+      background: #cfcfcf;
+      text-decoration: line-through;
+      color: #666;
+    }
+    button {
+      background: red;
+      border: none;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* Joint Area */
+    #jointArea {
+      position: relative;
+      width: 220px;
+      height: 50px;
+      margin-top: 30px;
+      background: #f8f8f8;
+      border-radius: 25px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .filter {
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 10px;
+      margin-left: 5px;
+    }
+    .paper {
+      flex-grow: 1;
+      height: 20px;
+      background: #faf0dc;
+      margin: 0 5px;
+      border-radius: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+    .grassFill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      background: linear-gradient(to right, #3e8e41, #6b8e23);
+      width: 0%;
+      border-radius: 10px;
+      transition: width 1s ease;
+    }
+    .glut {
+      width: 10px;
+      height: 10px;
+      background: radial-gradient(circle, #ff4500, #800000);
+      border-radius: 50%;
+      margin-right: 5px;
+      opacity: 0;
+      animation: glow 1s infinite alternate;
+    }
+    .smoke {
+      position: absolute;
+      right: 0;
+      top: -20px;
+      width: 20px;
+      height: 20px;
+      background: rgba(200, 200, 200, 0.5);
+      border-radius: 50%;
+      animation: smokeRise 3s infinite;
+      opacity: 0;
+    }
+
+    @keyframes glow {
+      from { filter: brightness(1); }
+      to { filter: brightness(2); }
+    }
+
+    @keyframes smokeRise {
+      0% {
+        transform: translateY(0px) scale(1);
+        opacity: 0.7;
+      }
+      50% {
+        transform: translateY(-20px) scale(1.2);
+        opacity: 0.5;
+      }
+      100% {
+        transform: translateY(-40px) scale(1.5);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <input id="todoInput" type="text" placeholder="Neue Aufgabe..." />
+  <ul id="todoList"></ul>
+
+  <div id="jointArea">
+    <div class="filter"></div>
+    <div class="paper">
+      <div class="grassFill"></div>
+    </div>
+    <div class="glut"></div>
+    <div class="smoke"></div>
+  </div>
+
+  <script>
+    const input = document.getElementById('todoInput');
+    const list = document.getElementById('todoList');
+    const grassFill = document.querySelector('.grassFill');
+    const glut = document.querySelector('.glut');
+    const smoke = document.querySelector('.smoke');
+
+    const todos = JSON.parse(localStorage.getItem('todos')) || [];
+
+    function saveTodos() {
+      const todoArray = [];
+      list.querySelectorAll('li').forEach(li => {
+        todoArray.push({
+          text: li.querySelector('span').textContent,
+          done: li.classList.contains('done')
+        });
+      });
+      localStorage.setItem('todos', JSON.stringify(todoArray));
+      updateJoint();
+    }
+
+    function addTodo(text, done = false) {
+      const li = document.createElement('li');
+      const span = document.createElement('span');
+      span.textContent = text;
+      li.appendChild(span);
+
+      const btn = document.createElement('button');
+      btn.textContent = 'x';
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        li.remove();
+        saveTodos();
+      };
+      li.appendChild(btn);
+
+      li.onclick = (e) => {
+        if (e.target.tagName !== 'BUTTON') {
+          li.classList.toggle('done');
+          saveTodos();
+        }
+      };
+
+      if (done) li.classList.add('done');
+      list.appendChild(li);
+    }
+
+    todos.forEach(todo => addTodo(todo.text, todo.done));
+
+    input.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter' && input.value.trim() !== '') {
+        addTodo(input.value.trim());
+        input.value = '';
+        saveTodos();
+      }
+    });
+
+    function updateJoint() {
+      const doneCount = list.querySelectorAll('li.done').length;
+      const total = list.querySelectorAll('li').length || 1; // vermeiden durch 0 teilen
+      const percent = Math.min((doneCount / total) * 100, 100);
+
+      grassFill.style.width = percent + "%";
+
+      if (doneCount >= total * 0.9) {
+        glut.style.opacity = 1;
+      } else {
+        glut.style.opacity = 0;
+      }
+
+      if (doneCount === total) {
+        smoke.style.opacity = 1;
+      } else {
+        smoke.style.opacity = 0;
+      }
+    }
+
+    updateJoint();
+  </script>
+</body>
+</html>
