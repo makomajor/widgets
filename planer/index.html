@@ -29,21 +29,20 @@
       gap: 10px;
     }
 
-    .nav-buttons button,
-    #darkModeToggle {
+    .nav-buttons button {
       padding: 8px 12px;
       font-size: 14px;
       cursor: pointer;
       border-radius: 6px;
       border: none;
-      background-color: black;
-      color: black;
+      background-color: white; /* Hintergrund immer weiß */
+      color: black; /* Text schwarz im normalen Modus */
+      transition: background-color 0.3s, color 0.3s;
     }
 
-    body.dark-mode .nav-buttons button,
-    body.dark-mode #darkModeToggle {
-      background-color: #f0f0f0;
-      color: #eee;
+    body.dark-mode .nav-buttons button {
+      background-color: white; /* Hintergrund bleibt weiß auch im dunklen Modus */
+      color: black; /* Schrift bleibt schwarz, weil weißer Hintergrund */
     }
 
     h1 {
