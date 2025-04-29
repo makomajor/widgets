@@ -18,33 +18,45 @@
       color: #e0e0e0;
     }
 
-    .title-container {
-      text-align: center;
-      position: relative;
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .nav-buttons button,
+    #darkModeToggle {
+      padding: 8px 12px;
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: 6px;
+      border: none;
+      background-color: #f0f0f0;
+    }
+
+    body.dark-mode .nav-buttons button,
+    body.dark-mode #darkModeToggle {
+      background-color: #333;
+      color: #eee;
     }
 
     h1 {
+      text-align: center;
       margin-bottom: 5px;
       font-size: 24px;
     }
 
     #weekRange {
+      text-align: center;
       font-size: 14px;
       color: inherit;
       margin-bottom: 20px;
-    }
-
-    .nav-buttons {
-      position: absolute;
-      top: 0;
-      right: 0;
-    }
-
-    .nav-buttons button, #darkModeToggle {
-      font-size: 16px;
-      padding: 4px 10px;
-      margin-left: 5px;
-      cursor: pointer;
     }
 
     form {
@@ -52,18 +64,19 @@
       text-align: center;
     }
 
-    .task-form {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-    }
-
-    input[type="text"], button {
+    #taskInput {
       padding: 10px;
       font-size: 16px;
       width: 90%;
       max-width: 400px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    body.dark-mode #taskInput {
+      background-color: #2a2a2a;
+      color: #e0e0e0;
+      border-color: #555;
     }
 
     .checkboxes {
@@ -71,12 +84,23 @@
       flex-wrap: wrap;
       justify-content: center;
       gap: 10px;
+      margin: 10px 0;
     }
 
     .checkboxes label {
       display: flex;
       align-items: center;
       gap: 5px;
+    }
+
+    button[type="submit"] {
+      padding: 10px 20px;
+      background-color: royalblue;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
     }
 
     .week {
@@ -130,6 +154,7 @@
       align-items: center;
       justify-content: space-between;
       color: black;
+      word-break: break-word;
     }
 
     body.dark-mode li {
@@ -139,7 +164,6 @@
 
     .task-text {
       flex-grow: 1;
-      word-break: break-word;
       cursor: pointer;
     }
 
@@ -156,35 +180,23 @@
       font-size: 16px;
       cursor: pointer;
       margin-left: 10px;
-      flex-shrink: 0;
-    }
-
-    @media (min-width: 600px) {
-      .day {
-        width: 45%;
-      }
-    }
-
-    @media (min-width: 900px) {
-      .day {
-        width: 30%;
-      }
     }
   </style>
 </head>
 <body>
 
-<div class="title-container">
-  <h1>Mein Wochenplaner</h1>
-  <div id="weekRange">Woche vom ...</div>
+<div class="header">
+  <button id="darkModeToggle">Dark Mode</button>
   <div class="nav-buttons">
     <button id="prevWeekBtn">&lt;</button>
     <button id="nextWeekBtn">&gt;</button>
-    <button id="darkModeToggle">Dark Mode</button>
   </div>
 </div>
 
-<form id="taskForm" class="task-form">
+<h1>Mein Wochenplaner</h1>
+<div id="weekRange">Woche vom ...</div>
+
+<form id="taskForm">
   <input type="text" id="taskInput" placeholder="Neue Aufgabe" required />
   <div class="checkboxes" id="dayCheckboxes"></div>
   <button type="submit">Hinzufügen</button>
@@ -199,7 +211,6 @@
   const taskInput = document.getElementById('taskInput');
   const form = document.getElementById('taskForm');
   const weekRange = document.getElementById('weekRange');
-  const darkToggle = document.getElementById('darkModeToggle');
 
   let weekOffset = 0;
   let tasksByWeek = JSON.parse(localStorage.getItem('weeklyTasks')) || {};
@@ -338,7 +349,7 @@
     renderWeek();
   });
 
-  darkToggle.addEventListener('click', () => {
+  document.getElementById('darkModeToggle').addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
   });
 
