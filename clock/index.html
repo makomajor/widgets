@@ -108,29 +108,27 @@
     }
 
     li {
+      background: white;
+      margin-bottom: 5px;
+      padding: 6px 8px;
+      border-radius: 5px;
+      font-size: 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 6px 8px;
-      background: #fff;
-      margin-bottom: 5px;
-      border-radius: 5px;
-      font-size: 14px;
     }
-    
-    li span {
-      flex: 1;
-      white-space: normal;
+
+    .task-text {
+      flex-grow: 1;
       word-break: break-word;
-      overflow-wrap: break-word;
+      white-space: normal;
     }
-    
-    li.done {
+
+    li.done .task-text {
       text-decoration: line-through;
       color: gray;
-      background: #eee;
     }
-    
+
     .delete-btn {
       background: none;
       border: none;
@@ -188,7 +186,7 @@
   function getMondayOfWeek(offset = 0) {
     const today = new Date();
     const monday = new Date(today.setDate(today.getDate() - today.getDay() + 1 + offset * 7));
-    monday.setHours(0,0,0,0);
+    monday.setHours(0, 0, 0, 0);
     return monday;
   }
 
@@ -239,7 +237,6 @@
 
       const dayDiv = document.createElement('div');
       dayDiv.classList.add('day');
-      dayDiv.id = dayName;
 
       const dateEl = document.createElement('h2');
       dateEl.textContent = dateStr;
@@ -251,12 +248,14 @@
 
       dayTasks.forEach((task, index) => {
         const li = document.createElement('li');
-        const span = document.createElement('span');
-        span.textContent = task.text;
+
+        const taskText = document.createElement('span');
+        taskText.className = 'task-text';
+        taskText.textContent = task.text;
 
         if (task.done) li.classList.add('done');
 
-        span.addEventListener('click', () => {
+        taskText.addEventListener('click', () => {
           task.done = !task.done;
           li.classList.toggle('done');
           saveTasks();
@@ -264,8 +263,8 @@
 
         const delBtn = document.createElement('button');
         delBtn.textContent = '×';
-        delBtn.classList.add('delete-btn');
-        delBtn.addEventListener('click', (e) => {
+        delBtn.className = 'delete-btn';
+        delBtn.addEventListener('click', e => {
           e.stopPropagation();
           dayTasks.splice(index, 1);
           weekTasks[dayName] = dayTasks;
@@ -273,7 +272,7 @@
           renderWeek();
         });
 
-        li.appendChild(span);
+        li.appendChild(taskText);
         li.appendChild(delBtn);
         ul.appendChild(li);
       });
