@@ -10,23 +10,33 @@
       margin: 20px;
     }
 
-    .header {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 15px;
-    }
-
-    .header button {
-      font-size: 20px;
-      padding: 5px 10px;
-      cursor: pointer;
+    .title-container {
+      text-align: center;
+      position: relative;
     }
 
     h1 {
-      margin: 0;
-      font-size: 22px;
+      margin-bottom: 5px;
+      font-size: 24px;
+    }
+
+    #weekRange {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    .nav-buttons {
+      position: absolute;
+      top: 0;
+      right: 0;
+    }
+
+    .nav-buttons button {
+      font-size: 16px;
+      padding: 4px 10px;
+      margin-left: 5px;
+      cursor: pointer;
     }
 
     form {
@@ -141,10 +151,13 @@
 </head>
 <body>
 
-<div class="header">
-  <button id="prevWeekBtn">&lt;</button>
-  <h1 id="weekTitle">Mein Wochenplaner</h1>
-  <button id="nextWeekBtn">&gt;</button>
+<div class="title-container">
+  <h1>Mein Wochenplaner</h1>
+  <div id="weekRange">Woche vom ...</div>
+  <div class="nav-buttons">
+    <button id="prevWeekBtn">&lt;</button>
+    <button id="nextWeekBtn">&gt;</button>
+  </div>
 </div>
 
 <form id="taskForm" class="task-form">
@@ -161,9 +174,10 @@
   const checkboxesDiv = document.getElementById('dayCheckboxes');
   const taskInput = document.getElementById('taskInput');
   const form = document.getElementById('taskForm');
-  const weekTitle = document.getElementById('weekTitle');
+  const weekRange = document.getElementById('weekRange');
 
-  let weekOffset = 0; // 0 = aktuelle Woche
+  let weekOffset = 0;
+  let tasksByWeek = JSON.parse(localStorage.getItem('weeklyTasks')) || {};
 
   function getMondayOfWeek(offset = 0) {
     const today = new Date();
@@ -177,10 +191,8 @@
   }
 
   function getWeekKey(monday) {
-    return monday.toISOString().split('T')[0]; // z. B. "2025-04-28"
+    return monday.toISOString().split('T')[0];
   }
-
-  let tasksByWeek = JSON.parse(localStorage.getItem('weeklyTasks')) || {};
 
   function saveTasks() {
     localStorage.setItem('weeklyTasks', JSON.stringify(tasksByWeek));
@@ -206,18 +218,18 @@
 
     const weekKey = getWeekKey(monday);
     if (!tasksByWeek[weekKey]) tasksByWeek[weekKey] = {};
-
     const weekTasks = tasksByWeek[weekKey];
 
-    weekTitle.textContent = `Woche: ${formatDate(monday)} – ${formatDate(sunday)}`;
-
+    weekRange.textContent = `Woche: ${formatDate(monday)} – ${formatDate(sunday)}`;
     weekDiv.innerHTML = '';
+
     for (let i = 0; i < 7; i++) {
       const date = new Date(monday);
       date.setDate(monday.getDate() + i);
 
       const dayName = days[i];
       const dateStr = formatDate(date);
+      const dayTasks = weekTasks[dayName] || [];
 
       const dayDiv = document.createElement('div');
       dayDiv.classList.add('day');
@@ -230,7 +242,6 @@
       title.textContent = dayName;
 
       const ul = document.createElement('ul');
-      const dayTasks = weekTasks[dayName] || [];
 
       dayTasks.forEach((task, index) => {
         const li = document.createElement('li');
