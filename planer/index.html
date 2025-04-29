@@ -102,6 +102,33 @@
       border-color: #888; /* optional: leicht dunklerer Rand */
       box-shadow: none;
     }
+        /* Fokus & Auswahl Korrekturen */
+    #taskInput:focus {
+      outline: none;
+      border-color: #888;
+      box-shadow: none;
+    }
+    .checkboxes label {
+      user-select: none;
+      outline: none;
+    }
+    .checkboxes input[type="checkbox"]:focus {
+      outline: none;
+      box-shadow: none;
+    }
+
+    /* Prioritätsstern Styling */
+    .priority-btn {
+      background: none;
+      border: none;
+      color: goldenrod;
+      font-size: 16px;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+    li.priority {
+      border-left: 4px solid goldenrod;
+    }
 
     body.dark-mode #taskInput {
       background-color: #2a2a2a;
@@ -247,6 +274,7 @@
 <div class="form-container">
   <input type="text" id="taskInput" placeholder="Neue Aufgabe" required />
   <button id="clearWeek" title="Alle Aufgaben löschen">🗑️</button>
+  <button id="undoBtn" title="Letzte Löschung rückgängig machen">↩️</button>
 </div>
 
 <div class="checkboxes" id="dayCheckboxes"></div>
@@ -261,6 +289,7 @@
   const weekRange = document.getElementById('weekRange');
   const clearWeekBtn = document.getElementById('clearWeek');
 
+  let lastDeletedWeek = null;
   let weekOffset = 0;
   let draggedTask = null;
   let draggedFrom = null;
@@ -356,6 +385,17 @@
           renderWeek();
         });
 
+        const starBtn = document.createElement('button');
+        starBtn.innerHTML = task.priority ? '⭐' : '☆';
+        starBtn.className = 'priority-btn';
+        starBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          task.priority = !task.priority;
+          saveTasks();
+          renderWeek();
+        });
+        if (task.priority) li.classList.add('priority');
+        li.appendChild(starBtn);
         li.appendChild(taskText);
         li.appendChild(delBtn);
         ul.appendChild(li);
@@ -465,9 +505,23 @@
     document.getElementById('darkModeToggle').textContent = isDark ? "☀️" : "🌙";
   });
 
+  document.getElementById('undoBtn').addEventListener('click', () => {
+    if (lastDeletedWeek) {
+      const monday = getMondayOfWeek(weekOffset);
+      const weekKey = getWeekKey(monday);
+      tasksByWeek[weekKey] = lastDeletedWeek;
+      saveTasks();
+      renderWeek();
+      lastDeletedWeek = null;
+    } else {
+      alert("Nichts zum Wiederherstellen.");
+    }
+  });
+
   clearWeekBtn.addEventListener('click', () => {
     const monday = getMondayOfWeek(weekOffset);
     const weekKey = getWeekKey(monday);
+    lastDeletedWeek = JSON.parse(JSON.stringify(tasksByWeek[weekKey])); // speichere Kopie
     tasksByWeek[weekKey] = {};
     saveTasks();
     renderWeek();
