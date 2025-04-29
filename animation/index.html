@@ -1,35 +1,129 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Gizeh Tipp & Papier Animation</title>
-  <style>
-    body {
-      background: #f0f0f0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    .sprite {
-      width: 128px; /* Breite eines einzelnen Frames */
-      height: 128px; /* Höhe eines Frames */
-      background: url('spritesheet-gizeh.png') 0 0 no-repeat;
-      animation: animieren 2s steps(4) infinite;
-      image-rendering: pixelated; /* Falls es pixelartig ist */
-    }
-
-    @keyframes animieren {
-      100% {
-        background-position: -512px 0; /* 4 Frames je 128px => 512px */
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Wochenplaner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .week {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .day {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            width: 13%;
+            box-sizing: border-box;
+            min-height: 200px;
+        }
+        .day h2 {
+            font-size: 16px;
+            margin-top: 0;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin: 5px 0;
+            cursor: pointer;
+        }
+        li.done {
+            text-decoration: line-through;
+            color: gray;
+        }
+        form {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        input, select, button {
+            padding: 5px;
+            margin: 5px;
+        }
+    </style>
 </head>
 <body>
 
-<div class="sprite"></div>
+<h1>Mein Wochenplaner</h1>
+
+<form id="taskForm">
+    <input type="text" id="taskInput" placeholder="Neue Aufgabe" required>
+    <select id="daySelect"></select>
+    <button type="submit">Hinzufügen</button>
+</form>
+
+<div class="week" id="week"></div>
+
+<script>
+    const days = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
+    const weekDiv = document.getElementById('week');
+    const daySelect = document.getElementById('daySelect');
+    const today = new Date();
+    const monday = new Date(today.setDate(today.getDate() - today.getDay() + 1));
+
+    function formatDate(date) {
+        return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+    }
+
+    function generateWeek() {
+        for (let i = 0; i < 7; i++) {
+            let dayDate = new Date(monday);
+            dayDate.setDate(monday.getDate() + i);
+
+            // Erstelle ein Div für jeden Tag
+            const dayDiv = document.createElement('div');
+            dayDiv.classList.add('day');
+            dayDiv.id = days[i];
+
+            const dayTitle = document.createElement('h2');
+            dayTitle.textContent = `${days[i]} (${formatDate(dayDate)})`;
+
+            const taskList = document.createElement('ul');
+
+            dayDiv.appendChild(dayTitle);
+            dayDiv.appendChild(taskList);
+            weekDiv.appendChild(dayDiv);
+
+            // Option für das Auswahlmenü
+            const option = document.createElement('option');
+            option.value = days[i];
+            option.textContent = days[i];
+            daySelect.appendChild(option);
+        }
+    }
+
+    generateWeek();
+
+    document.getElementById('taskForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const taskText = document.getElementById('taskInput').value.trim();
+        const day = daySelect.value;
+
+        if (taskText !== "") {
+            const taskItem = document.createElement('li');
+            taskItem.textContent = taskText;
+
+            // Klick auf Aufgabe markiert als erledigt
+            taskItem.addEventListener('click', function() {
+                taskItem.classList.toggle('done');
+            });
+
+            document.querySelector(`#${day} ul`).appendChild(taskItem);
+
+            // Eingabefelder zurücksetzen
+            document.getElementById('taskInput').value = "";
+            daySelect.value = days[0];
+        }
+    });
+</script>
 
 </body>
 </html>
