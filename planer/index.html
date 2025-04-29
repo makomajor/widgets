@@ -36,12 +36,13 @@
       cursor: pointer;
       border-radius: 6px;
       border: none;
-      background-color: #f0f0f0;
+      background-color: #ddd;
+      color: black;
     }
 
     body.dark-mode .nav-buttons button,
     body.dark-mode #darkModeToggle {
-      background-color: #2a2a2a;
+      background-color: #f0f0f0;
       color: #eee;
     }
 
@@ -264,9 +265,6 @@
   }
 
   function renderWeek() {
-    dayDiv.appendChild(dateEl);
-    dayDiv.appendChild(title);
-    dayDiv.appendChild(ul);
     const monday = getMondayOfWeek(weekOffset);
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
