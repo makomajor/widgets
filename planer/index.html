@@ -150,9 +150,9 @@
 
     #undoBtn {
       padding: 8px 12px;
-      font-size: 18px;
+      font-size: 22px;
       border-radius: 6px;
-      background-color: #e0f0ff; /* hellblau als Kontrast */
+      background-color: transparent;
       border: none;
       color: #005b96;
       cursor: pointer;
@@ -308,7 +308,7 @@
   const weekRange = document.getElementById('weekRange');
   const clearWeekBtn = document.getElementById('clearWeek');
 
-  let lastAddedTask = null;
+  let undoStack = [];
   let lastDeletedWeek = null;
   let weekOffset = 0;
   let draggedTask = null;
@@ -499,7 +499,7 @@
         if (!weekTasks[day]) weekTasks[day] = [];
         const taskObj = { text, done: false };
         weekTasks[day].push(taskObj);
-        lastAddedTask = { weekKey, day, index: weekTasks[day].length - 1 };
+        undoStack.push({ weekKey, day, index: weekTasks[day].length - 1 });
       });
 
       tasksByWeek[weekKey] = weekTasks;
@@ -528,17 +528,16 @@
   });
 
   document.getElementById('undoBtn').addEventListener('click', () => {
-    if (lastAddedTask) {
-      const { weekKey, day, index } = lastAddedTask;
+    if (undoStack.length > 0) {
+      const { weekKey, day, index } = undoStack.pop();
       const tasks = tasksByWeek[weekKey]?.[day];
       if (tasks && tasks.length > index) {
         tasks.splice(index, 1);
         saveTasks();
         renderWeek();
-        lastAddedTask = null;
       }
     } else {
-      alert("Kein letzter Task zum Rückgängig machen.");
+      alert("Kein rückgängig machbarer Eintrag.");
     }
   });
 
