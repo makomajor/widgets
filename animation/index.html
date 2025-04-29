@@ -117,14 +117,20 @@
       justify-content: space-between;
       align-items: center;
       word-break: break-word;
+      white-space: normal;
     }
-
+    
+    li span {
+      flex-grow: 1;
+      overflow-wrap: break-word;
+    }
+    
     li.done {
       text-decoration: line-through;
       color: gray;
       background: #eee;
     }
-
+    
     .delete-btn {
       background: none;
       border: none;
@@ -135,7 +141,7 @@
       margin-left: 10px;
       flex-shrink: 0;
     }
-
+    
     @media (min-width: 600px) {
       .day {
         width: 45%;
