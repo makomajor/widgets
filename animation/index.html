@@ -85,17 +85,29 @@
     li {
       background: white;
       margin-bottom: 5px;
-      padding: 8px;
+      padding: 8px 10px;
       border-radius: 5px;
       font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       cursor: pointer;
-      word-break: break-word;
     }
 
     li.done {
       text-decoration: line-through;
       color: gray;
       background: #eee;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: red;
+      font-weight: bold;
+      font-size: 16px;
+      margin-left: 10px;
+      cursor: pointer;
     }
 
     @media (min-width: 600px) {
@@ -186,13 +198,29 @@
       if (tasks[day]) {
         tasks[day].forEach((task, index) => {
           const li = document.createElement('li');
-          li.textContent = task.text;
+          const span = document.createElement('span');
+          span.textContent = task.text;
+
           if (task.done) li.classList.add('done');
-          li.addEventListener('click', () => {
+
+          span.addEventListener('click', () => {
             task.done = !task.done;
             li.classList.toggle('done');
             saveTasks();
           });
+
+          const delBtn = document.createElement('button');
+          delBtn.textContent = '×';
+          delBtn.classList.add('delete-btn');
+          delBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // verhindert Markieren beim Löschen
+            tasks[day].splice(index, 1);
+            saveTasks();
+            renderTasks();
+          });
+
+          li.appendChild(span);
+          li.appendChild(delBtn);
           ul.appendChild(li);
         });
       }
