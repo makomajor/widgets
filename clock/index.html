@@ -64,11 +64,18 @@
       text-align: center;
     }
 
+    .form-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
     #taskInput {
       padding: 10px;
       font-size: 16px;
-      width: 90%;
-      max-width: 400px;
+      width: 250px;
       border: 1px solid #ccc;
       border-radius: 5px;
     }
@@ -77,6 +84,16 @@
       background-color: #2a2a2a;
       color: #e0e0e0;
       border-color: #555;
+    }
+
+    #clearWeek {
+      padding: 10px;
+      font-size: 14px;
+      background-color: crimson;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
     }
 
     .checkboxes {
@@ -155,6 +172,7 @@
       justify-content: space-between;
       color: black;
       word-break: break-word;
+      touch-action: none;
     }
 
     body.dark-mode li {
@@ -164,7 +182,7 @@
 
     .task-text {
       flex-grow: 1;
-      cursor: pointer;
+      cursor: grab;
     }
 
     li.done .task-text {
@@ -180,6 +198,14 @@
       font-size: 16px;
       cursor: pointer;
       margin-left: 10px;
+    }
+
+    li.dragging {
+      opacity: 0.5;
+    }
+
+    .day.dragover {
+      outline: 2px dashed #888;
     }
   </style>
 </head>
@@ -197,7 +223,10 @@
 <div id="weekRange">Woche vom ...</div>
 
 <form id="taskForm">
-  <input type="text" id="taskInput" placeholder="Neue Aufgabe" required />
+  <div class="form-container">
+    <input type="text" id="taskInput" placeholder="Neue Aufgabe" required />
+    <button id="clearWeek" type="button">Alle löschen</button>
+  </div>
   <div class="checkboxes" id="dayCheckboxes"></div>
   <button type="submit">Hinzufügen</button>
 </form>
@@ -211,8 +240,12 @@
   const taskInput = document.getElementById('taskInput');
   const form = document.getElementById('taskForm');
   const weekRange = document.getElementById('weekRange');
+  const clearWeekBtn = document.getElementById('clearWeek');
 
   let weekOffset = 0;
+  let draggedTask = null;
+  let draggedFrom = null;
+
   let tasksByWeek = JSON.parse(localStorage.getItem('weeklyTasks')) || {};
 
   function getMondayOfWeek(offset = 0) {
@@ -259,27 +292,28 @@
     weekRange.textContent = `Woche: ${formatDate(monday)} – ${formatDate(sunday)}`;
     weekDiv.innerHTML = '';
 
-    for (let i = 0; i < 7; i++) {
+    days.forEach(day => {
       const date = new Date(monday);
-      date.setDate(monday.getDate() + i);
-
-      const dayName = days[i];
+      date.setDate(monday.getDate() + days.indexOf(day));
       const dateStr = formatDate(date);
-      const dayTasks = weekTasks[dayName] || [];
+      const dayTasks = weekTasks[day] || [];
 
       const dayDiv = document.createElement('div');
       dayDiv.classList.add('day');
+      dayDiv.dataset.day = day;
 
       const dateEl = document.createElement('h2');
       dateEl.textContent = dateStr;
-
       const title = document.createElement('h3');
-      title.textContent = dayName;
+      title.textContent = day;
 
       const ul = document.createElement('ul');
 
       dayTasks.forEach((task, index) => {
         const li = document.createElement('li');
+        li.draggable = true;
+        li.dataset.index = index;
+        li.dataset.day = day;
 
         const taskText = document.createElement('span');
         taskText.className = 'task-text';
@@ -299,7 +333,7 @@
         delBtn.addEventListener('click', e => {
           e.stopPropagation();
           dayTasks.splice(index, 1);
-          weekTasks[dayName] = dayTasks;
+          weekTasks[day] = dayTasks;
           saveTasks();
           renderWeek();
         });
@@ -307,13 +341,47 @@
         li.appendChild(taskText);
         li.appendChild(delBtn);
         ul.appendChild(li);
+
+        // Drag events
+        li.addEventListener('dragstart', e => {
+          draggedTask = task;
+          draggedFrom = { day, index };
+          li.classList.add('dragging');
+        });
+        li.addEventListener('dragend', () => {
+          draggedTask = null;
+          draggedFrom = null;
+          li.classList.remove('dragging');
+        });
+      });
+
+      // Drop zone events
+      dayDiv.addEventListener('dragover', e => {
+        e.preventDefault();
+        dayDiv.classList.add('dragover');
+      });
+
+      dayDiv.addEventListener('dragleave', () => {
+        dayDiv.classList.remove('dragover');
+      });
+
+      dayDiv.addEventListener('drop', () => {
+        dayDiv.classList.remove('dragover');
+        if (draggedTask && draggedFrom) {
+          const fromTasks = weekTasks[draggedFrom.day];
+          fromTasks.splice(draggedFrom.index, 1);
+          if (!weekTasks[day]) weekTasks[day] = [];
+          weekTasks[day].push(draggedTask);
+          saveTasks();
+          renderWeek();
+        }
       });
 
       dayDiv.appendChild(dateEl);
       dayDiv.appendChild(title);
       dayDiv.appendChild(ul);
       weekDiv.appendChild(dayDiv);
-    }
+    });
   }
 
   form.addEventListener('submit', e => {
@@ -351,6 +419,14 @@
 
   document.getElementById('darkModeToggle').addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
+  });
+
+  clearWeekBtn.addEventListener('click', () => {
+    const monday = getMondayOfWeek(weekOffset);
+    const weekKey = getWeekKey(monday);
+    tasksByWeek[weekKey] = {};
+    saveTasks();
+    renderWeek();
   });
 
   createCheckboxes();
