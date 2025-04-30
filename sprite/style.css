@@ -7,8 +7,8 @@ body {
 }
 
 .sprite {
-  width: 64px; /* Breite eines Frames */
-  height: 64px; /* Höhe eines Frames */
+  width: 128px; /* Breite eines Frames */
+  height: 128px; /* Höhe eines Frames */
   margin: 0 auto;
   background-image: url("spritesheet.png");
   background-repeat: no-repeat;
@@ -24,6 +24,6 @@ body {
     background-position: 0 0;
   }
   to {
-    background-position: -256px 0; /* 4 Frames * 64px */
+    background-position: -512px 0; /* 4 Frames * 64px */
   }
 }
