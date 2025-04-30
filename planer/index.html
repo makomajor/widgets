@@ -1,4 +1,3 @@
-<!-- KOMPLETTPAKET: HTML, CSS, JS mit Einstellungen, Favoriten, Feedback, Dark Mode -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -12,16 +11,29 @@
       background-color: white;
       color: black;
       transition: background-color 0.3s, color 0.3s;
+      text-align: center;
     }
     body.dark-mode {
       background-color: #121212;
       color: #e0e0e0;
     }
 
+    button {
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+    button:hover {
+      transform: scale(1.05);
+    }
+
+    .day:hover {
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
     .header {
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
+      text-align: center;
     }
     .nav-buttons {
       display: flex;
@@ -60,39 +72,22 @@
       flex-wrap: wrap;
       gap: 10px;
       margin-bottom: 10px;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-top: 15px;
     }
 
-    #taskInput {
-      padding: 10px;
-      font-size: 16px;
-      width: 250px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-
-    #addTaskBtn {
-      padding: 8px 12px;
-      font-size: 18px;
-      background-color: #4caf50;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    #addTaskBtn:hover {
-      background-color: #45a049;
-    }
-    body.dark-mode #addTaskBtn {
-      background-color: #357a38;
-    }
-
-    .action-buttons button {
+    .action-buttons {
       padding: 8px 12px;
       font-size: 18px;
       background: transparent;
       border: none;
       color: #333;
       cursor: pointer;
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
     }
     body.dark-mode .action-buttons button {
       color: #ddd;
@@ -103,6 +98,14 @@
       flex-wrap: wrap;
       gap: 10px;
       margin-bottom: 15px;
+      justify-content: center;
+      text-align: center;
+    }
+    .checkboxes::before {
+      content: "Tage auswählen:";
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
     }
 
     .week {
@@ -155,6 +158,8 @@
       border-radius: 6px;
       margin-bottom: 10px;
       max-width: 400px;
+      justify-content: center;
+      text-align: center;
     }
     body.dark-mode .settings-panel {
       background: #2a2a2a;
@@ -190,41 +195,52 @@
       color: gray;
       opacity: 0.6;
     }
+
+    .top-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 <body>
-<div class="header">
-  <div style="display: flex; gap: 10px;">
-    <button id="darkModeToggle">🌙</button>
-    <button id="settingsToggle">⚙️</button>
+<div class="top-block">
+  <div class="header">
+    <div style="display: flex; gap: 10px;">
+      <button id="darkModeToggle">🌙</button>
+      <button id="settingsToggle">⚙️</button>
+    </div>
+    <div class="nav-buttons">
+      <button id="prevWeekBtn">&lt;</button>
+      <button id="nextWeekBtn">&gt;</button>
+    </div>
   </div>
-  <div class="nav-buttons">
-    <button id="prevWeekBtn">&lt;</button>
-    <button id="nextWeekBtn">&gt;</button>
+
+  <h1>Mein Wochenplaner</h1>
+  <div id="weekRange">Woche vom ...</div>
+  <div id="feedback" class="feedback"></div>
+
+  <div id="settingsPanel" class="settings-panel" style="display:none;">
+    <h3>Einstellungen</h3>
+    <label><input type="checkbox" id="toggleFavorites" checked> Favoriten aktivieren</label>
+    <label><input type="checkbox" id="toggleBanner" checked> Mini-Benachrichtigungen anzeigen</label>
+    <hr>
+    <div id="toggleDays"></div>
   </div>
+
+  <div class="form-container">
+    <input type="text" id="taskInput" placeholder="Neue Aufgabe" required />
+    <button id="addTaskBtn">➕</button>
+    <div class="action-buttons">
+      <button id="undoBtn">↩️</button>
+      <button id="clearWeek">🗑️</button>
+    </div>
+  </div>
+  <div class="checkboxes" id="dayCheckboxes"></div>
 </div>
 
-<h1>Mein Wochenplaner</h1>
-<div id="weekRange">Woche vom ...</div>
-<div id="feedback" class="feedback"></div>
-
-<div id="settingsPanel" class="settings-panel" style="display:none;">
-  <h3>Einstellungen</h3>
-  <label><input type="checkbox" id="toggleFavorites" checked> Favoriten aktivieren</label>
-  <label><input type="checkbox" id="toggleBanner" checked> Mini-Benachrichtigungen anzeigen</label>
-  <hr>
-  <div id="toggleDays"></div>
-</div>
-
-<div class="form-container">
-  <input type="text" id="taskInput" placeholder="Neue Aufgabe" required />
-  <button id="addTaskBtn">➕</button>
-  <div class="action-buttons">
-    <button id="undoBtn">↩️</button>
-    <button id="clearWeek">🗑️</button>
-  </div>
-</div>
-<div class="checkboxes" id="dayCheckboxes"></div>
 <div class="week" id="week"></div>
 
 <script>
@@ -316,11 +332,29 @@ function renderWeek() {
     title.textContent = day;
     const ul = document.createElement("ul");
 
+    ul.ondragover = e => e.preventDefault();
+    ul.ondrop = e => {
+      e.preventDefault();
+      const data = JSON.parse(e.dataTransfer.getData("text/plain"));
+      const draggedTask = tasksByWeek[data.weekKey][data.day].splice(data.index, 1)[0];
+      dayTasks.push(draggedTask);
+      saveTasks();
+      renderWeek();
+    };
+
     dayTasks.forEach((task, index) => {
       const li = document.createElement("li");
       const taskText = document.createElement("span");
       taskText.className = "task-text";
       taskText.textContent = task.text;
+      taskText.setAttribute("draggable", true);
+      taskText.addEventListener("dragstart", e => {
+        e.dataTransfer.setData("text/plain", JSON.stringify({ weekKey, day, index }));
+        taskText.style.opacity = "0.5";
+      });
+      taskText.addEventListener("dragend", () => {
+        taskText.style.opacity = "1";
+      });
       if (task.done) li.classList.add("done");
       taskText.addEventListener("click", () => {
         task.done = !task.done;
