@@ -296,7 +296,7 @@
     #addTaskBtn {
       padding: 8px 12px;
       font-size: 18px;
-      background-color: #4caf50;
+      background-color: transparent;
       color: white;
       border: none;
       border-radius: 6px;
@@ -305,11 +305,11 @@
     }
 
     #addTaskBtn:hover {
-      background-color: #45a049;
+      background-color: #95c7c8;
     }
 
     body.dark-mode #addTaskBtn {
-      background-color: #357a38;
+      background-color: antiquewhite;
     }
   </style>
 </head>
@@ -523,30 +523,36 @@
     });
   }
 
+  function addTaskFromInput() {
+    const text = taskInput.value.trim();
+    const selectedDays = Array.from(checkboxesDiv.querySelectorAll('input:checked')).map(cb => cb.value);
+    if (!text || selectedDays.length === 0) return;
+
+    const monday = getMondayOfWeek(weekOffset);
+    const weekKey = getWeekKey(monday);
+    const weekTasks = tasksByWeek[weekKey] || {};
+
+    selectedDays.forEach(day => {
+      const taskObj = { text, done: false };
+      if (!weekTasks[day]) weekTasks[day] = [];
+      weekTasks[day].push(taskObj);
+      undoStack.push({ weekKey, day, index: weekTasks[day].length - 1 });
+    });
+
+    tasksByWeek[weekKey] = weekTasks;
+    saveTasks();
+    renderWeek();
+
+    // Feld leeren
+    taskInput.value = '';
+    checkboxesDiv.querySelectorAll('input').forEach(cb => cb.checked = false);
+  }
+
+  // Eingabe mit Enter
   taskInput.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      const text = taskInput.value.trim();
-      const selectedDays = Array.from(checkboxesDiv.querySelectorAll('input:checked')).map(cb => cb.value);
-      if (!text || selectedDays.length === 0) return;
-
-      const monday = getMondayOfWeek(weekOffset);
-      const weekKey = getWeekKey(monday);
-      const weekTasks = tasksByWeek[weekKey] || {};
-
-      selectedDays.forEach(day => {
-        if (!weekTasks[day]) weekTasks[day] = [];
-        const taskObj = { text, done: false };
-        weekTasks[day].push(taskObj);
-        undoStack.push({ weekKey, day, index: weekTasks[day].length - 1 });
-      });
-
-      tasksByWeek[weekKey] = weekTasks;
-      saveTasks();
-      renderWeek();
-
-      taskInput.value = '';
-      checkboxesDiv.querySelectorAll('input').forEach(cb => cb.checked = false);
+      addTaskFromInput();
     }
   });
 
@@ -579,6 +585,10 @@
       alert("Kein rückgängig machbarer Eintrag.");
     }
   });
+
+  document.getElementById('addTaskBtn').addEventListener('click', () => {
+  addTaskFromInput();
+});
 
   clearWeekBtn.addEventListener('click', () => {
     const monday = getMondayOfWeek(weekOffset);
