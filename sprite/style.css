@@ -7,12 +7,12 @@ body {
 }
 
 .sprite {
-  width: 128px; /* Breite eines Frames */
-  height: 128px; /* Höhe eines Frames */
+  width: 128px;
+  height: 128px;
   margin: 0 auto;
   background-image: url("spritesheet.png");
   background-repeat: no-repeat;
-  image-rendering: pixelated; /* Für scharfe Pixel-Kanten */
+  image-rendering: pixelated;
 }
 
 .walking {
@@ -20,10 +20,6 @@ body {
 }
 
 @keyframes walk {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: -512px 0; /* 4 Frames * 64px */
-  }
+  from { background-position: 0 0; }
+  to   { background-position: -512px 0; } /* 4 x 128px */
 }
