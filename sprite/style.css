@@ -1,0 +1,29 @@
+body {
+  background: #222;
+  color: white;
+  font-family: sans-serif;
+  text-align: center;
+  padding-top: 50px;
+}
+
+.sprite {
+  width: 64px; /* Breite eines Frames */
+  height: 64px; /* Höhe eines Frames */
+  margin: 0 auto;
+  background-image: url("spritesheet.png");
+  background-repeat: no-repeat;
+  image-rendering: pixelated; /* Für scharfe Pixel-Kanten */
+}
+
+.walking {
+  animation: walk 0.8s steps(4) infinite;
+}
+
+@keyframes walk {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -256px 0; /* 4 Frames * 64px */
+  }
+}
