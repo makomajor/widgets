@@ -287,6 +287,30 @@
     .day.dragover {
       outline: 2px dashed #888;
     }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    #addTaskBtn {
+      padding: 8px 12px;
+      font-size: 18px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    #addTaskBtn:hover {
+      background-color: #45a049;
+    }
+
+    body.dark-mode #addTaskBtn {
+      background-color: #357a38;
+    }
   </style>
 </head>
 <body>
@@ -304,8 +328,11 @@
 
 <div class="form-container">
   <input type="text" id="taskInput" placeholder="Neue Aufgabe" required />
-  <button id="undoBtn" title="Letzte Löschung rückgängig machen">↩️</button>
-  <button id="clearWeek" title="Alle Aufgaben löschen">🗑️</button>
+  <button id="addTaskBtn" title="Aufgabe hinzufügen">➕</button>
+  <div class="action-buttons">
+    <button id="undoBtn" title="Letzte Löschung rückgängig machen">↩️</button>
+    <button id="clearWeek" title="Alle Aufgaben löschen">🗑️</button>
+  </div>
 </div>
 
 <div class="checkboxes" id="dayCheckboxes"></div>
