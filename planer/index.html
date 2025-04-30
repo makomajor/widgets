@@ -251,11 +251,23 @@
     .task-text {
       flex-grow: 1;
       cursor: grab;
+      transition: color 0.3s ease, text-decoration-color 0.3s ease, opacity 0.3s ease;
     }
 
+    /* Optional: wenn du lieber opacity statt nur durchstreichen willst */
     li.done .task-text {
       text-decoration: line-through;
       color: gray;
+      opacity: 0.6;
+    }
+
+    li {
+      transition: background-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    li.done {
+      opacity: 0.6;
+      transform: scale(0.98);
     }
 
     .delete-btn {
