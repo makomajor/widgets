@@ -4,7 +4,29 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wochenplaner</title>
-  <style>
+    <style>
+    @keyframes fadeOutTask {
+      to {
+        opacity: 0;
+        transform: scale(0.95);
+        height: 0;
+        margin: 0;
+        padding: 0;
+      }
+    }
+
+    .fade-out {
+      animation: fadeOutTask 0.5s forwards;
+    }
+    :root {
+      --border-color: rgba(100, 100, 100, 0.3);
+      --hover-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
+    }
+    body.dark-mode {
+      --border-color: rgba(255, 255, 255, 0.2);
+      --hover-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+    }
+
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
@@ -22,16 +44,29 @@
       transition: background-color 0.3s ease, transform 0.2s ease;
     }
     button:hover {
-      transform: scale(1.05);
+      background: none;
+      transform: scale(1.1);
     }
 
-    .day:hover {
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    /* Unified border for UI elements */
+    #taskInput,
+    .settings-panel,
+    .day,
+    .day li {
+      border: 1px solid var(--border-color);
+    }
+
+    /* Subtle hover shadow for interactivity */
+    button:hover,
+    #taskInput:hover,
+    .day:hover,
+    .day li:hover {
+      box-shadow: var(--hover-shadow);
     }
 
     .header {
       display: flex;
-      justify-content: center;
+      justify-content: space-between;
       align-items: center;
       text-align: center;
     }
@@ -39,56 +74,73 @@
       display: flex;
       gap: 10px;
     }
-    .nav-buttons button {
-      padding: 8px 12px;
-      font-size: 14px;
-      cursor: pointer;
-      border-radius: 6px;
+    #addTaskBtn,
+    .action-buttons button,
+    #darkModeToggle,
+    #settingsToggle {
+      background: none;
       border: none;
+      font-size: 26px;
+      padding: 4px;
+      border-radius: 0;
+      color: inherit;
+      cursor: pointer;
+      margin-right: 0;
+    }
+    .nav-buttons button {
       background-color: white;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 18px;
+      padding: 6px 10px;
       color: black;
     }
-    .nav-buttons button:hover {
-      background-color: #f2f2f2;
-    }
-    #darkModeToggle, #settingsToggle {
-      padding: 8px 12px;
-      font-size: 16px;
-      border: none;
-      border-radius: 6px;
-      background-color: #333;
-      color: white;
-      cursor: pointer;
-      margin-right: 10px;
-    }
-
-    body.dark-mode #darkModeToggle,
-    body.dark-mode #settingsToggle {
+    body.dark-mode .nav-buttons button {
       background-color: #2a2a2a;
+      color: white;
+      border: 1px solid var(--border-color);
+    }
+    #darkModeToggle,
+    #settingsToggle {
+      margin-right: 10px;
     }
 
     .form-container {
       display: flex;
+      flex-direction: row;
       flex-wrap: wrap;
       gap: 10px;
       margin-bottom: 10px;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
       text-align: center;
       margin-top: 15px;
     }
 
+    #taskInput {
+      padding: 12px;
+      font-size: 14px;
+      width: 280px;
+      border-radius: 6px;
+      background-color: rgba(255, 255, 255, 0.6);
+    }
+    body.dark-mode #taskInput {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #eee;
+    }
+
+    /* Remove background and border for addTaskBtn and action-buttons button (handled above) */
+
     .action-buttons {
-      padding: 8px 12px;
-      font-size: 18px;
-      background: transparent;
-      border: none;
-      color: #333;
-      cursor: pointer;
-      margin-top: 10px;
       display: flex;
       gap: 10px;
+      margin: 0;
     }
+
+    #addTaskBtn {
+      margin: 0;
+    }
+
     body.dark-mode .action-buttons button {
       color: #ddd;
     }
@@ -107,6 +159,14 @@
       margin-bottom: 5px;
       font-weight: bold;
     }
+    .checkboxes label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .checkboxes input[type="checkbox"] {
+      margin: 2px;
+    }
 
     .week {
       display: flex;
@@ -116,12 +176,23 @@
     }
 
     .day {
-      border: 1px solid #ccc;
       border-radius: 8px;
       padding: 10px;
       width: 100%;
       max-width: 250px;
       background: #f9f9f9;
+    }
+
+    .day h2 {
+      margin-bottom: 4px;
+      font-size: 16px;
+      font-weight: normal;
+    }
+
+    .day h3 {
+      margin-top: 0;
+      font-size: 18px;
+      font-weight: bold;
     }
     body.dark-mode .day {
       background: #1e1e1e;
@@ -174,21 +245,108 @@
       margin-right: 10px;
     }
 
+    .day ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .day li {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      transition: background-color 0.3s ease, opacity 0.4s ease, transform 0.3s ease;
+
+    }
+    .day li.done {
+      background-color: #d4edda;
+      opacity: 0.6;
+      transform: scale(0.98);
+    }
+    body.dark-mode .day li {
+      background: #2a2a2a;
+      color: #eee;
+    }
+    body.dark-mode .day li.done {
+      background-color: #3f3b2a;
+    }
+
+    .task-text {
+      flex-grow: 1;
+      text-align: left;
+      cursor: grab;
+      transition: color 0.3s ease, opacity 0.3s ease;
+    }
+
+    /* Visual cue for drag-over on empty or filled day lists */
+    .day ul.drag-over {
+      outline: 3px dashed #888;
+      background-color: rgba(100, 100, 100, 0.1);
+      border-radius: 6px;
+      transition: background-color 0.2s ease, outline 0.2s ease;
+      min-height: 100px;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+    body.dark-mode .day ul.drag-over {
+      background-color: rgba(255, 255, 255, 0.1);
+      outline: 2px dashed rgba(255, 255, 255, 0.3);
+    }
+
+    .drag-placeholder {
+      height: 40px;
+      margin: 6px 0;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.04);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      animation: fadeInPlaceholder 0.2s ease-in-out;
+    }
+
+    body.dark-mode .drag-placeholder {
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes fadeInPlaceholder {
+      from {
+        opacity: 0;
+        transform: translateY(-3px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     .priority-btn {
+      order: -1;
+      margin-left: 0;
       background: none;
       border: none;
       color: goldenrod;
       font-size: 16px;
       cursor: pointer;
-      margin-left: 8px;
+    }
+
+    .delete-btn {
+      transition: color 0.3s ease, transform 0.2s ease;
+      margin-left: auto;
+    }
+
+    .delete-btn:hover {
+      color: #b00020;
+      transform: scale(1.15);
+      background-color: rgba(255, 0, 0, 0.05);
+      border-radius: 4px;
     }
     li.priority {
       border-left: 4px solid goldenrod;
-    }
-    .task-text {
-      flex-grow: 1;
-      cursor: grab;
-      transition: color 0.3s ease, opacity 0.3s ease;
     }
     li.done .task-text {
       text-decoration: line-through;
@@ -196,17 +354,17 @@
       opacity: 0.6;
     }
 
-    .top-block {
+
+    /* .top-block {
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
       margin-bottom: 20px;
-    }
+    } */
   </style>
 </head>
 <body>
-<div class="top-block">
   <div class="header">
     <div style="display: flex; gap: 10px;">
       <button id="darkModeToggle">🌙</button>
@@ -218,14 +376,15 @@
     </div>
   </div>
 
-  <h1>Mein Wochenplaner</h1>
-  <div id="weekRange">Woche vom ...</div>
+  <h1 style="margin-bottom: 0;">Mein Wochenplaner</h1>
+  <div id="weekRange" style="margin-top: 4px; margin-bottom: 15px !important;">Woche vom ...</div>
   <div id="feedback" class="feedback"></div>
 
   <div id="settingsPanel" class="settings-panel" style="display:none;">
     <h3>Einstellungen</h3>
     <label><input type="checkbox" id="toggleFavorites" checked> Favoriten aktivieren</label>
     <label><input type="checkbox" id="toggleBanner" checked> Mini-Benachrichtigungen anzeigen</label>
+    <label><input type="checkbox" id="toggleAutoRemoveDone"> Erledigte Aufgaben automatisch ausblenden</label>
     <hr>
     <div id="toggleDays"></div>
   </div>
@@ -239,7 +398,6 @@
     </div>
   </div>
   <div class="checkboxes" id="dayCheckboxes"></div>
-</div>
 
 <div class="week" id="week"></div>
 
@@ -253,7 +411,10 @@ const clearWeekBtn = document.getElementById("clearWeek");
 let tasksByWeek = JSON.parse(localStorage.getItem("weeklyTasks")) || {};
 let undoStack = [];
 let weekOffset = 0;
-let featureFlags = { favorites: true, banner: true };
+let featureFlags = { favorites: true, banner: true, autoRemoveDone: false };
+document.getElementById("toggleAutoRemoveDone").addEventListener("change", e => {
+  featureFlags.autoRemoveDone = e.target.checked;
+});
 let hiddenDays = new Set();
 
 function getMondayOfWeek(offset = 0) {
@@ -332,18 +493,71 @@ function renderWeek() {
     title.textContent = day;
     const ul = document.createElement("ul");
 
-    ul.ondragover = e => e.preventDefault();
+    ul.ondragover = e => {
+      // --- Drag placeholder logic ---
+      const dragging = document.querySelector(".dragging");
+      const afterElement = [...ul.children].find(li => {
+        const box = li.getBoundingClientRect();
+        return e.clientY < box.top + box.height / 2;
+      });
+
+      const existingPlaceholder = ul.querySelector(".drag-placeholder");
+      if (existingPlaceholder) existingPlaceholder.remove();
+
+      const placeholder = document.createElement("li");
+      placeholder.className = "drag-placeholder";
+      if (afterElement) {
+        ul.insertBefore(placeholder, afterElement);
+      } else {
+        ul.appendChild(placeholder);
+      }
+      e.preventDefault();
+    };
+    ul.ondragenter = e => {
+      e.preventDefault();
+      const existing = ul.querySelector(".drag-placeholder");
+      if (!existing) {
+        const placeholder = document.createElement("li");
+        placeholder.className = "drag-placeholder";
+        ul.appendChild(placeholder);
+      }
+      ul.classList.add("drag-over");
+    };
+    ul.ondragleave = e => {
+      e.preventDefault();
+      ul.classList.remove("drag-over");
+      const placeholder = ul.querySelector(".drag-placeholder");
+      if (placeholder) placeholder.remove();
+    };
     ul.ondrop = e => {
       e.preventDefault();
+      ul.classList.remove("drag-over");
+      // Remove all placeholders on drop
+      const placeholders = ul.querySelectorAll(".drag-placeholder");
+      placeholders.forEach(p => p.remove());
       const data = JSON.parse(e.dataTransfer.getData("text/plain"));
       const draggedTask = tasksByWeek[data.weekKey][data.day].splice(data.index, 1)[0];
-      dayTasks.push(draggedTask);
+
+      const afterElement = Array.from(ul.children).find(li => {
+        const box = li.getBoundingClientRect();
+        return e.clientY < box.top + box.height / 2;
+      });
+
+      let insertAt = ul.children.length;
+      if (afterElement) {
+        insertAt = Array.from(ul.children).indexOf(afterElement);
+      }
+
+      dayTasks.splice(insertAt, 0, draggedTask);
       saveTasks();
       renderWeek();
     };
 
     dayTasks.forEach((task, index) => {
       const li = document.createElement("li");
+      li.ondrop = e => e.preventDefault();
+      // Smooth animation for rearrangement
+      li.style.transition = "all 0.3s ease";
       const taskText = document.createElement("span");
       taskText.className = "task-text";
       taskText.textContent = task.text;
@@ -351,21 +565,34 @@ function renderWeek() {
       taskText.addEventListener("dragstart", e => {
         e.dataTransfer.setData("text/plain", JSON.stringify({ weekKey, day, index }));
         taskText.style.opacity = "0.5";
+        li.classList.add("dragging");
       });
       taskText.addEventListener("dragend", () => {
         taskText.style.opacity = "1";
+        li.classList.remove("dragging");
       });
       if (task.done) li.classList.add("done");
       taskText.addEventListener("click", () => {
         task.done = !task.done;
         saveTasks();
-        renderWeek();
+        if (task.done && featureFlags.autoRemoveDone) {
+          li.classList.add("fade-out");
+          setTimeout(() => {
+            const idx = dayTasks.indexOf(task);
+            if (idx !== -1) {
+              dayTasks.splice(idx, 1);
+              saveTasks();
+              renderWeek();
+            }
+          }, 500);
+        } else {
+          renderWeek();
+        }
       });
 
-      li.appendChild(taskText);
-
+      let starBtn = null;
       if (featureFlags.favorites) {
-        const starBtn = document.createElement("button");
+        starBtn = document.createElement("button");
         starBtn.innerHTML = task.priority ? "⭐" : "☆";
         starBtn.className = "priority-btn";
         starBtn.addEventListener("click", e => {
@@ -375,7 +602,6 @@ function renderWeek() {
           renderWeek();
         });
         if (task.priority) li.classList.add("priority");
-        li.appendChild(starBtn);
       }
 
       const delBtn = document.createElement("button");
@@ -388,6 +614,10 @@ function renderWeek() {
         saveTasks();
         renderWeek();
       });
+
+      // Order: priority button → taskText → delete button
+      if (starBtn) li.appendChild(starBtn);
+      li.appendChild(taskText);
       li.appendChild(delBtn);
       ul.appendChild(li);
     });
