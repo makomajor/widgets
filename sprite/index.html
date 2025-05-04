@@ -2,37 +2,132 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Sprite Demo</title>
+  <title>Sprite Animator</title>
   <style>
     body {
-      background: #222;
-      color: white;
       font-family: sans-serif;
-      text-align: center;
-      padding-top: 50px;
+      background: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
     }
-
-    .sprite {
-      width: 128px;
-      height: 128px;
-      margin: 0 auto;
-      background-image: url("spritesheet.png");
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 500px;
+    }
+    .preview {
+      display: inline-block;
+      background: #ccc;
+      margin: 20px auto;
+      overflow: hidden;
+    }
+    .frame {
+      width: 100%;
+      height: 100%;
       background-repeat: no-repeat;
+      background-size: auto;
       image-rendering: pixelated;
     }
-
-    .walking {
-      animation: walk 0.8s steps(4) infinite;
+    label {
+      display: flex;
+      justify-content: space-between;
+      margin: 5px 0;
     }
-
-    @keyframes walk {
-      from { background-position: 0 0; }
-      to   { background-position: -512px 0; } /* 4 x 128px */
+    input[type="number"], input[type="file"] {
+      width: 80px;
+    }
+    .controls {
+      text-align: center;
+      margin-top: 10px;
+    }
+    button {
+      margin: 5px;
     }
   </style>
 </head>
 <body>
-  <h1>Spritesheet-Demo</h1>
-  <div class="sprite walking"></div>
+  <div class="container">
+    <h2>Sprite Animator</h2>
+    <label>Dateien: <input type="file" id="fileInput" multiple accept="image/png"></label>
+    <label>Spalten: <input type="number" id="columns" value="3" min="1"></label>
+    <label>Zeilen: <input type="number" id="rows" value="3" min="1"></label>
+    <label>Breite: <input type="number" id="frameWidth" value="256"></label>
+    <label>Höhe: <input type="number" id="frameHeight" value="256"></label>
+    <label>Frames: <input type="number" id="frameCount" value="9"></label>
+    <label>Speed (ms): <input type="number" id="speed" value="100"></label>
+
+    <div class="preview"><div class="frame" id="frame"></div></div>
+
+    <div class="controls">
+      <button id="start">Start</button>
+      <button id="stop">Stop</button>
+    </div>
+  </div>
+
+  <script>
+    const frameEl = document.getElementById('frame');
+    const fileInput = document.getElementById('fileInput');
+    const columnsInput = document.getElementById('columns');
+    const rowsInput = document.getElementById('rows');
+    const frameWidthInput = document.getElementById('frameWidth');
+    const frameHeightInput = document.getElementById('frameHeight');
+    const frameCountInput = document.getElementById('frameCount');
+    const speedInput = document.getElementById('speed');
+    const startBtn = document.getElementById('start');
+    const stopBtn = document.getElementById('stop');
+
+    let sheets = [];
+    let currentFrame = 0;
+    let intervalId = null;
+
+    fileInput.addEventListener('change', (e) => {
+      sheets = [...e.target.files]
+        .filter(f => f.type === "image/png")
+        .map(f => URL.createObjectURL(f));
+      currentFrame = 0;
+      showFrame(currentFrame);
+    });
+
+    function showFrame(frame) {
+      if (!sheets.length) return;
+      const cols = parseInt(columnsInput.value);
+      const rows = parseInt(rowsInput.value);
+      const fw = parseInt(frameWidthInput.value);
+      const fh = parseInt(frameHeightInput.value);
+      const total = parseInt(frameCountInput.value);
+      const framesPerSheet = cols * rows;
+
+      const sheetIndex = Math.floor(frame / framesPerSheet);
+      const localIndex = frame % framesPerSheet;
+      const col = localIndex % cols;
+      const row = Math.floor(localIndex / cols);
+
+      if (!sheets[sheetIndex]) return;
+      frameEl.style.backgroundImage = `url('${sheets[sheetIndex]}')`;
+      frameEl.style.backgroundPosition = `-${col * fw}px -${row * fh}px`;
+      frameEl.style.width = fw + 'px';
+      frameEl.style.height = fh + 'px';
+    }
+
+    function updateFrame() {
+      const total = parseInt(frameCountInput.value);
+      showFrame(currentFrame);
+      currentFrame = (currentFrame + 1) % total;
+    }
+
+    startBtn.onclick = () => {
+      if (!intervalId) {
+        intervalId = setInterval(updateFrame, parseInt(speedInput.value));
+      }
+    };
+
+    stopBtn.onclick = () => {
+      clearInterval(intervalId);
+      intervalId = null;
+    };
+  </script>
 </body>
 </html>

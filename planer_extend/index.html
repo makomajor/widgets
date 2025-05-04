@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wochenplaner</title>
+    <style>
+    @keyframes fadeOutTask {
+      to {
+        opacity: 0;
+        transform: scale(0.95);
+        height: 0;
+        margin: 0;
+        padding: 0;
+      }
+    }
+
+    .fade-out {
+      animation: fadeOutTask 0.5s forwards;
+    }
+    :root {
+      --border-color: rgba(100, 100, 100, 0.3);
+      --hover-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
+    }
+    body.dark-mode {
+      --border-color: rgba(255, 255, 255, 0.2);
+      --hover-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: white;
+      color: black;
+      transition: background-color 0.3s, color 0.3s;
+      text-align: center;
+    }
+    body.dark-mode {
+      background-color: #121212;
+      color: #e0e0e0;
+    }
+
+    button {
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+    button:hover {
+      background: none;
+      transform: scale(1.1);
+    }
+
+    /* Unified border for UI elements */
+    #taskInput,
+    .settings-panel,
+    .day,
+    .day li {
+      border: 1px solid var(--border-color);
+    }
+
+    /* Subtle hover shadow for interactivity */
+    button:hover,
+    #taskInput:hover,
+    .day:hover,
+    .day li:hover {
+      box-shadow: var(--hover-shadow);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-align: center;
+    }
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    #addTaskBtn,
+    .action-buttons button,
+    #darkModeToggle,
+    #settingsToggle {
+      background: none;
+      border: none;
+      font-size: 26px;
+      padding: 4px;
+      border-radius: 0;
+      color: inherit;
+      cursor: pointer;
+      margin-right: 0;
+    }
+    .nav-buttons button {
+      background-color: white;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 18px;
+      padding: 6px 10px;
+      color: black;
+    }
+    body.dark-mode .nav-buttons button {
+      background-color: #2a2a2a;
+      color: white;
+      border: 1px solid var(--border-color);
+    }
+    #darkModeToggle,
+    #settingsToggle {
+      margin-right: 10px;
+    }
+
+    .form-container {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    #taskInput {
+      padding: 12px;
+      font-size: 14px;
+      width: 280px;
+      border-radius: 6px;
+      background-color: rgba(255, 255, 255, 0.6);
+    }
+    body.dark-mode #taskInput {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #eee;
+    }
+
+    /* Remove background and border for addTaskBtn and action-buttons button (handled above) */
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin: 0;
+    }
+
+    #addTaskBtn {
+      margin: 0;
+    }
+
+    body.dark-mode .action-buttons button {
+      color: #ddd;
+    }
+
+    .checkboxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+      justify-content: center;
+      text-align: center;
+    }
+    .checkboxes::before {
+      content: "Tage auswählen:";
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .checkboxes label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .checkboxes input[type="checkbox"] {
+      margin: 2px;
+    }
+
+    .week {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .day {
+      border-radius: 8px;
+      padding: 10px;
+      width: 100%;
+      max-width: 250px;
+      background: #f9f9f9;
+    }
+
+    .day h2 {
+      margin-bottom: 4px;
+      font-size: 16px;
+      font-weight: normal;
+    }
+
+    .day h3 {
+      margin-top: 0;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    body.dark-mode .day {
+      background: #1e1e1e;
+    }
+
+    .feedback {
+      margin: 10px auto;
+      text-align: center;
+      padding: 10px 15px;
+      max-width: 400px;
+      border-radius: 6px;
+      font-size: 14px;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .feedback.show {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .feedback.success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .feedback.error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    /* Sober Counter modern styles */
+    .sober-counter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.03);
+      padding: 10px 16px;
+      border-radius: 8px;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      cursor: pointer;
+    }
+
+    #soberCounters.drag-over {
+      outline: 2px dashed var(--border-color);
+    }
+    .sober-counter.dragging {
+      opacity: 0.5;
+    }
+
+    .sober-counter:hover {
+      background-color: rgba(0, 0, 0, 0.07);
+      transform: scale(1.04);
+    }
+
+    body.dark-mode .sober-counter {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    body.dark-mode .sober-counter:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .sober-counter span {
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+
+    .settings-panel {
+      background: #f0f0f0;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      max-width: 400px;
+      justify-content: center;
+      text-align: center;
+    }
+    body.dark-mode .settings-panel {
+      background: #2a2a2a;
+      color: #eee;
+    }
+    .settings-panel label {
+      display: block;
+      margin: 5px 0;
+    }
+    #toggleDays label {
+      display: inline-block;
+      margin-right: 10px;
+    }
+
+    .day ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      position: relative;
+    }
+
+    .day li {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      transition: background-color 0.3s ease, opacity 0.4s ease, transform 0.3s ease;
+    }
+    .day li.done {
+      background-color: #d4edda;
+      opacity: 0.6;
+      transform: scale(0.98);
+    }
+    body.dark-mode .day li {
+      background: #2a2a2a;
+      color: #eee;
+    }
+    body.dark-mode .day li.done {
+      background-color: #3f3b2a;
+    }
+
+    .task-text {
+      flex-grow: 1;
+      text-align: left;
+      cursor: grab;
+      transition: color 0.3s ease, opacity 0.3s ease;
+    }
+
+    /* Visual cue for drag-over on empty or filled day lists */
+    .day ul.drag-over {
+      outline: 3px dashed #888;
+      background-color: rgba(100, 100, 100, 0.1);
+      border-radius: 6px;
+      transition: background-color 0.2s ease, outline 0.2s ease;
+      min-height: 100px;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+    body.dark-mode .day ul.drag-over {
+      background-color: rgba(255, 255, 255, 0.1);
+      outline: 2px dashed rgba(255, 255, 255, 0.3);
+    }
+
+    .drag-placeholder {
+      display: none;
+    }
+
+    @keyframes fadeInPlaceholder {
+      from {
+        opacity: 0;
+        transform: translateY(-3px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .priority-btn {
+      order: -1;
+      margin-left: 0;
+      background: none;
+      border: none;
+      color: goldenrod;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .delete-btn {
+      transition: color 0.3s ease, transform 0.2s ease;
+      margin-left: auto;
+    }
+
+    .delete-btn:hover {
+      color: #b00020;
+      transform: scale(1.15);
+      background-color: rgba(255, 0, 0, 0.05);
+      border-radius: 4px;
+    }
+    li.priority {
+      border-left: 4px solid goldenrod;
+    }
+    li.done .task-text {
+      text-decoration: line-through;
+      color: gray;
+      opacity: 0.6;
+    }
+
+
+    /* .top-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 20px;
+    } */
+
+    /* Tooltip-Stil für Sober Counter (data-title) */
+    .sober-counter[data-title] {
+      position: relative;
+    }
+    .sober-counter[data-title]:hover::after {
+      content: attr(data-title);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 10;
+      opacity: 0.95;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div style="display: flex; gap: 10px;">
+      <button id="darkModeToggle">🌙</button>
+      <button id="settingsToggle">⚙️</button>
+    </div>
+    <div class="nav-buttons">
+      <button id="prevWeekBtn">&lt;</button>
+      <button id="nextWeekBtn">&gt;</button>
+    </div>
+  </div>
+
+  <h1 style="margin-bottom: 0;">Mein Wochenplaner</h1>
+  <div id="weekRange" style="margin-top: 4px; margin-bottom: 15px !important;">Woche vom ...</div>
+  <div id="feedback" class="feedback"></div>
+
+  <div id="settingsPanel" class="settings-panel" style="display:none;">
+    <h3>Einstellungen</h3>
+    <label><input type="checkbox" id="toggleFavorites" checked> Favoriten aktivieren</label>
+    <label><input type="checkbox" id="toggleBanner" checked> Mini-Benachrichtigungen anzeigen</label>
+    <label><input type="checkbox" id="toggleAutoRemoveDone"> Erledigte Aufgaben automatisch ausblenden</label>
+    <hr>
+    <label><input type="checkbox" id="toggleSoberCounters" checked> Sober Counter anzeigen</label>
+    <!-- Sober Counter Settings Block -->
+    <div id="soberSettings" style="margin-top: 10px;">
+      <strong>Sober Counter bearbeiten:</strong>
+      <div>
+        <label><input type="checkbox" class="soberVisibility" data-type="brokkoli" checked> 🥦: <input type="number" id="soberInput-brokkoli" min="0" style="width: 60px;"> Tage</label>
+      </div>
+      <div>
+        <label><input type="checkbox" class="soberVisibility" data-type="bier" checked> 🍺: <input type="number" id="soberInput-bier" min="0" style="width: 60px;"> Tage</label>
+      </div>
+      <div>
+        <label><input type="checkbox" class="soberVisibility" data-type="zigarette" checked> 🚬: <input type="number" id="soberInput-zigarette" min="0" style="width: 60px;"> Tage</label>
+      </div>
+      <button id="applySoberDaysBtn" style="margin-top: 8px;">Übernehmen</button>
+    </div>
+    <div id="toggleDays"></div>
+  </div>
+
+  <div class="form-container">
+    <input type="text" id="taskInput" placeholder="Neue Aufgabe" required />
+    <button id="addTaskBtn">➕</button>
+    <div class="action-buttons">
+      <button id="undoBtn">↩️</button>
+      <button id="clearWeek">🗑️</button>
+    </div>
+  </div>
+  <div class="checkboxes" id="dayCheckboxes"></div>
+
+<div class="week" id="week"></div>
+
+<script>
+const days = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
+const taskInput = document.getElementById("taskInput");
+const weekRange = document.getElementById("weekRange");
+const weekDiv = document.getElementById("week");
+const checkboxesDiv = document.getElementById("dayCheckboxes");
+const clearWeekBtn = document.getElementById("clearWeek");
+let tasksByWeek = JSON.parse(localStorage.getItem("weeklyTasks")) || {};
+let undoStack = [];
+let weekOffset = 0;
+let featureFlags = { favorites: true, banner: true, autoRemoveDone: false };
+document.getElementById("toggleAutoRemoveDone").addEventListener("change", e => {
+  featureFlags.autoRemoveDone = e.target.checked;
+});
+let hiddenDays = new Set();
+
+function getMondayOfWeek(offset = 0) {
+  const today = new Date();
+  const monday = new Date(today.setDate(today.getDate() - today.getDay() + 1 + offset * 7));
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+}
+function formatDate(date) {
+  return date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+}
+function getWeekKey(monday) {
+  return monday.toISOString().split("T")[0];
+}
+function saveTasks() {
+  localStorage.setItem("weeklyTasks", JSON.stringify(tasksByWeek));
+}
+function showFeedback(message, type = "success") {
+  if (!featureFlags.banner) return;
+  const feedback = document.getElementById("feedback");
+  feedback.textContent = message;
+  feedback.className = `feedback ${type} show`;
+  setTimeout(() => feedback.classList.remove("show"), 2500);
+}
+function createCheckboxes() {
+  checkboxesDiv.innerHTML = "";
+  days.forEach(day => {
+    const label = document.createElement("label");
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = day;
+    label.appendChild(checkbox);
+    label.append(day);
+    checkboxesDiv.appendChild(label);
+  });
+}
+function createDayToggles() {
+  const toggleContainer = document.getElementById("toggleDays");
+  toggleContainer.innerHTML = "<strong>Tage anzeigen:</strong><br>";
+  days.forEach(day => {
+    const label = document.createElement("label");
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = !hiddenDays.has(day);
+    checkbox.addEventListener("change", () => {
+      checkbox.checked ? hiddenDays.delete(day) : hiddenDays.add(day);
+      renderWeek();
+    });
+    label.appendChild(checkbox);
+    label.append(day);
+    toggleContainer.appendChild(label);
+  });
+}
+function renderWeek() {
+  const monday = getMondayOfWeek(weekOffset);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  const weekKey = getWeekKey(monday);
+  if (!tasksByWeek[weekKey]) tasksByWeek[weekKey] = {};
+  const weekTasks = tasksByWeek[weekKey];
+  weekRange.textContent = `Woche: ${formatDate(monday)} – ${formatDate(sunday)}`;
+  weekDiv.innerHTML = "";
+  createDayToggles();
+  days.forEach(day => {
+    if (hiddenDays.has(day)) return;
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + days.indexOf(day));
+    const dateStr = formatDate(date);
+    const dayTasks = weekTasks[day] || [];
+
+    const dayDiv = document.createElement("div");
+    dayDiv.dataset.day = day;
+    dayDiv.className = "day";
+    const dateEl = document.createElement("h2");
+    dateEl.textContent = dateStr;
+    const title = document.createElement("h3");
+    title.textContent = day;
+    const ul = document.createElement("ul");
+
+    ul.ondragover = e => {
+      e.preventDefault();
+      const dragging = document.querySelector(".dragging");
+      if (!dragging) return;
+
+      let placeholder = ul.querySelector(".drag-placeholder");
+      if (!placeholder) {
+        placeholder = document.createElement("div");
+        placeholder.className = "drag-placeholder";
+        ul.appendChild(placeholder);
+      }
+
+      const mouseY = e.clientY;
+      const children = Array.from(ul.children).filter(el => el !== dragging && el !== placeholder);
+
+      for (const child of children) {
+        const rect = child.getBoundingClientRect();
+        const midpoint = rect.top + rect.height / 2;
+
+        if (mouseY < midpoint) {
+          placeholder.style.top = `${child.offsetTop}px`;
+          return;
+        }
+      }
+
+      // Robusterer Block: untere Hälfte des letzten Elements korrekt behandeln
+      if (children.length > 0) {
+        const last = children[children.length - 1];
+        const rect = last.getBoundingClientRect();
+        const midpoint = rect.top + rect.height / 2;
+
+        if (mouseY >= midpoint) {
+          placeholder.style.top = `${last.offsetTop + last.offsetHeight}px`;
+        } else {
+          placeholder.style.top = `${last.offsetTop}px`;
+        }
+      } else {
+        placeholder.style.top = `0px`;
+      }
+    };
+    ul.ondragenter = e => {
+      e.preventDefault();
+      const container = ul.closest(".day");
+      if (container) container.classList.add("drag-over");
+
+      const existing = ul.querySelector(".drag-placeholder");
+      if (!existing) {
+        const placeholder = document.createElement("li");
+        placeholder.className = "drag-placeholder";
+        ul.appendChild(placeholder);
+      }
+    };
+    ul.ondragleave = e => {
+      e.preventDefault();
+      const container = ul.closest(".day");
+      if (container) container.classList.remove("drag-over");
+
+      const placeholder = ul.querySelector(".drag-placeholder");
+      if (placeholder) placeholder.remove();
+    };
+    ul.ondrop = e => {
+      e.preventDefault();
+      const container = ul.closest(".day");
+      if (container) container.classList.remove("drag-over");
+      ul.classList.remove("drag-over");
+      // Neue, präzisere Variante:
+      const placeholder = ul.querySelector(".drag-placeholder");
+      let insertAt = dayTasks.length;
+
+      if (placeholder) {
+        const placeholderTop = parseFloat(placeholder.style.top);
+        const lis = Array.from(ul.querySelectorAll("li"));
+        const listItems = lis.filter(el => !el.classList.contains("drag-placeholder"));
+        insertAt = listItems.findIndex(el => el.offsetTop >= placeholderTop);
+        if (insertAt === -1) insertAt = listItems.length;
+        placeholder.remove();
+      }
+
+      const data = JSON.parse(e.dataTransfer.getData("text/plain"));
+      const isSameList = data.weekKey === weekKey && data.day === day;
+
+      const draggedTaskList = tasksByWeek[data.weekKey][data.day];
+      const [draggedTask] = draggedTaskList.splice(data.index, 1);
+
+      // Wenn wir innerhalb derselben Liste sortieren und die neue Position ist nach dem Entfernen "weiter hinten",
+      // müssen wir insertAt um 1 reduzieren.
+      if (isSameList && data.index < insertAt) {
+        insertAt--;
+      }
+
+      dayTasks.splice(insertAt, 0, draggedTask);
+      saveTasks();
+      renderWeek();
+    };
+
+    dayTasks.forEach((task, index) => {
+      const li = document.createElement("li");
+      li.ondrop = e => e.preventDefault();
+      // Smooth animation for rearrangement
+      li.style.transition = "all 0.3s ease";
+      const taskText = document.createElement("span");
+      taskText.className = "task-text";
+      taskText.textContent = task.text;
+      taskText.setAttribute("draggable", true);
+      taskText.addEventListener("dragstart", e => {
+        e.dataTransfer.setData("text/plain", JSON.stringify({ weekKey, day, index }));
+        taskText.style.opacity = "0.5";
+        li.classList.add("dragging");
+      });
+      taskText.addEventListener("dragend", () => {
+        taskText.style.opacity = "1";
+        li.classList.remove("dragging");
+      });
+      if (task.done) li.classList.add("done");
+      taskText.addEventListener("click", () => {
+        task.done = !task.done;
+        saveTasks();
+        if (task.done && featureFlags.autoRemoveDone) {
+          li.classList.add("fade-out");
+          setTimeout(() => {
+            const idx = dayTasks.indexOf(task);
+            if (idx !== -1) {
+              dayTasks.splice(idx, 1);
+              saveTasks();
+              renderWeek();
+            }
+          }, 500);
+        } else {
+          renderWeek();
+        }
+      });
+
+      let starBtn = null;
+      if (featureFlags.favorites) {
+        starBtn = document.createElement("button");
+        starBtn.innerHTML = task.priority ? "⭐" : "☆";
+        starBtn.className = "priority-btn";
+        starBtn.addEventListener("click", e => {
+          e.stopPropagation();
+          task.priority = !task.priority;
+          saveTasks();
+          renderWeek();
+        });
+        if (task.priority) li.classList.add("priority");
+      }
+
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "×";
+      delBtn.className = "delete-btn";
+      delBtn.addEventListener("click", e => {
+        e.stopPropagation();
+        dayTasks.splice(index, 1);
+        weekTasks[day] = dayTasks;
+        saveTasks();
+        renderWeek();
+      });
+
+      // Order: priority button → taskText → delete button
+      if (starBtn) li.appendChild(starBtn);
+      li.appendChild(taskText);
+      li.appendChild(delBtn);
+      ul.appendChild(li);
+    });
+
+    dayDiv.appendChild(dateEl);
+    dayDiv.appendChild(title);
+    dayDiv.appendChild(ul);
+    weekDiv.appendChild(dayDiv);
+  });
+}
+function addTaskFromInput() {
+  const text = taskInput.value.trim();
+  const selectedDays = Array.from(checkboxesDiv.querySelectorAll("input:checked")).map(cb => cb.value);
+  if (!text || selectedDays.length === 0) {
+    showFeedback("Text und mindestens ein Tag erforderlich", "error");
+    return;
+  }
+  const monday = getMondayOfWeek(weekOffset);
+  const weekKey = getWeekKey(monday);
+  const weekTasks = tasksByWeek[weekKey] || {};
+
+  selectedDays.forEach(day => {
+    const task = { text, done: false };
+    if (!weekTasks[day]) weekTasks[day] = [];
+    weekTasks[day].push(task);
+    undoStack.push({ weekKey, day, index: weekTasks[day].length - 1 });
+  });
+
+  tasksByWeek[weekKey] = weekTasks;
+  saveTasks();
+  renderWeek();
+  taskInput.value = "";
+  checkboxesDiv.querySelectorAll("input").forEach(cb => cb.checked = false);
+  showFeedback("Aufgabe hinzugefügt ✅", "success");
+}
+
+document.getElementById("addTaskBtn").addEventListener("click", addTaskFromInput);
+taskInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    addTaskFromInput();
+  }
+});
+document.getElementById("undoBtn").addEventListener("click", () => {
+  if (undoStack.length > 0) {
+    const { weekKey, day, index } = undoStack.pop();
+    const tasks = tasksByWeek[weekKey]?.[day];
+    if (tasks && tasks.length > index) {
+      tasks.splice(index, 1);
+      saveTasks();
+      renderWeek();
+    }
+  } else {
+    showFeedback("Nichts zum Rückgängig machen", "error");
+  }
+});
+document.getElementById("clearWeek").addEventListener("click", () => {
+  const monday = getMondayOfWeek(weekOffset);
+  const weekKey = getWeekKey(monday);
+  tasksByWeek[weekKey] = {};
+  saveTasks();
+  renderWeek();
+});
+document.getElementById("prevWeekBtn").addEventListener("click", () => {
+  weekOffset--;
+  renderWeek();
+});
+document.getElementById("nextWeekBtn").addEventListener("click", () => {
+  weekOffset++;
+  renderWeek();
+});
+document.getElementById("darkModeToggle").addEventListener("click", () => {
+  document.body.classList.toggle("dark-mode");
+  document.getElementById("darkModeToggle").textContent = document.body.classList.contains("dark-mode") ? "☀️" : "🌙";
+});
+document.getElementById("settingsToggle").addEventListener("click", () => {
+  const panel = document.getElementById("settingsPanel");
+  panel.style.display = panel.style.display === "none" ? "block" : "none";
+});
+document.getElementById("toggleFavorites").addEventListener("change", e => {
+  featureFlags.favorites = e.target.checked;
+  renderWeek();
+});
+document.getElementById("toggleBanner").addEventListener("change", e => {
+  featureFlags.banner = e.target.checked;
+});
+
+
+// Sober Counter Toggle (robusterer Block, nun in DOMContentLoaded)
+document.addEventListener("DOMContentLoaded", () => {
+  const soberContainer = document.getElementById("soberCounters");
+  const soberToggle = document.getElementById("toggleSoberCounters");
+
+  function toggleSoberContainerDisplay(force) {
+    const shouldShow = force !== undefined ? force : soberToggle.checked;
+    soberContainer.style.display = shouldShow ? "flex" : "none";
+  }
+
+  soberToggle.addEventListener("change", e => {
+    toggleSoberContainerDisplay(e.target.checked);
+    localStorage.setItem("showSoberCounters", e.target.checked ? "true" : "false");
+  });
+
+  const showSober = localStorage.getItem("showSoberCounters");
+  if (showSober === "false") {
+    toggleSoberContainerDisplay(false);
+    soberToggle.checked = false;
+  } else {
+    toggleSoberContainerDisplay(true);
+  }
+
+  // Sober Counter Sichtbarkeit-Checkboxen
+  document.querySelectorAll(".soberVisibility").forEach(cb => {
+    const type = cb.dataset.type;
+    const visible = localStorage.getItem("soberVisible_" + type);
+    if (visible === "false") {
+      cb.checked = false;
+      const counter = document.querySelector(`.sober-counter[data-type="${type}"]`);
+      if (counter) counter.style.display = "none";
+    }
+
+    cb.addEventListener("change", () => {
+      const counter = document.querySelector(`.sober-counter[data-type="${type}"]`);
+      const show = cb.checked;
+      if (counter) counter.style.display = show ? "flex" : "none";
+      localStorage.setItem("soberVisible_" + type, show ? "true" : "false");
+    });
+  });
+});
+
+createCheckboxes();
+renderWeek();
+</script>
+  <div id="soberCounters" style="margin-top: 30px; padding: 20px 0; border-top: 1px solid var(--border-color); display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; font-size: 20px;">
+    <div class="sober-counter" data-type="brokkoli">🥦: <span>0</span> Tage</div>
+    <div class="sober-counter" data-type="bier">🍺: <span>0</span> Tage</div>
+    <div class="sober-counter" data-type="zigarette">🚬: <span>0</span> Tage</div>
+  </div>
+<script>
+    const soberTypes = ["brokkoli", "bier", "zigarette"];
+    function updateSoberCounters() {
+      soberTypes.forEach(type => {
+        const key = "sober_" + type;
+        const lastDate = localStorage.getItem(key);
+        let days = 0;
+        if (lastDate) {
+          const then = new Date(lastDate);
+          const now = new Date();
+          then.setHours(0, 0, 0, 0);
+          now.setHours(0, 0, 0, 0);
+          days = Math.floor((now - then) / (1000 * 60 * 60 * 24));
+        }
+        document.querySelector(`.sober-counter[data-type="${type}"] span`).textContent = days;
+        // Tooltip mit Datum anzeigen
+        const el = document.querySelector(`.sober-counter[data-type="${type}"]`);
+        if (el && lastDate) {
+          const d = new Date(lastDate);
+          el.setAttribute("data-title", "Seit: " + d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" }));
+        }
+      });
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".sober-counter").forEach(el => {
+        el.addEventListener("click", () => {
+          const type = el.dataset.type;
+          localStorage.setItem("sober_" + type, new Date().toISOString());
+          updateSoberCounters();
+          if (typeof showFeedback === "function") {
+            showFeedback(`${type} zurückgesetzt`, "success");
+          }
+        });
+      });
+      updateSoberCounters();
+      // Sober Einstellungen initial befüllen
+      initSoberInputs();
+
+      // Drag & Drop Sober Counter
+      const soberContainer = document.getElementById("soberCounters");
+      let draggedSober = null;
+
+      document.querySelectorAll(".sober-counter").forEach(el => {
+        el.setAttribute("draggable", "true");
+
+        el.addEventListener("dragstart", e => {
+          draggedSober = el;
+          el.classList.add("dragging");
+        });
+        el.addEventListener("dragend", e => {
+          draggedSober = null;
+          el.classList.remove("dragging");
+        });
+
+        el.addEventListener("dragover", e => {
+          e.preventDefault();
+          const bounding = el.getBoundingClientRect();
+          const offset = e.clientX - bounding.left + e.clientY - bounding.top;
+          const parent = el.parentNode;
+          if (offset < bounding.width / 2) {
+            parent.insertBefore(draggedSober, el);
+          } else {
+            parent.insertBefore(draggedSober, el.nextSibling);
+          }
+        });
+      });
+
+      // Reihenfolge speichern
+      new MutationObserver(() => {
+        const order = Array.from(soberContainer.children).map(div => div.dataset.type);
+        localStorage.setItem("soberOrder", JSON.stringify(order));
+      }).observe(soberContainer, { childList: true });
+
+      // Mobile Touch Support
+      let touchStartX = 0;
+      soberContainer.addEventListener("touchstart", e => {
+        const target = e.target.closest(".sober-counter");
+        if (target) {
+          draggedSober = target;
+          touchStartX = e.touches[0].clientX;
+        }
+      });
+      soberContainer.addEventListener("touchmove", e => {
+        if (!draggedSober) return;
+        const x = e.touches[0].clientX;
+        const over = document.elementFromPoint(x, e.touches[0].clientY);
+        const target = over?.closest(".sober-counter");
+        if (target && target !== draggedSober) {
+          const rect = target.getBoundingClientRect();
+          const before = x < rect.left + rect.width / 2;
+          if (before) {
+            soberContainer.insertBefore(draggedSober, target);
+          } else {
+            soberContainer.insertBefore(draggedSober, target.nextSibling);
+          }
+        }
+      });
+      soberContainer.addEventListener("touchend", () => {
+        draggedSober = null;
+      });
+
+      // Reihenfolge beim Laden anwenden
+      const savedOrder = JSON.parse(localStorage.getItem("soberOrder") || "[]");
+      if (savedOrder.length) {
+        const map = {};
+        document.querySelectorAll(".sober-counter").forEach(div => {
+          map[div.dataset.type] = div;
+        });
+        savedOrder.forEach(type => {
+          const el = map[type];
+          if (el) soberContainer.appendChild(el);
+        });
+      }
+    });
+
+    // Sober Einstellungen initial befüllen
+    function initSoberInputs() {
+      soberTypes.forEach(type => {
+        const input = document.getElementById("soberInput-" + type);
+        const lastDate = localStorage.getItem("sober_" + type);
+        if (input && lastDate) {
+          const days = Math.floor((new Date().setHours(0, 0, 0, 0) - new Date(lastDate).setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24));
+          input.value = days;
+        } else if (input) {
+          input.value = "";
+        }
+      });
+    }
+
+    document.getElementById("applySoberDaysBtn").addEventListener("click", () => {
+      soberTypes.forEach(type => {
+        const input = document.getElementById("soberInput-" + type);
+        const days = parseInt(input.value);
+        if (!isNaN(days)) {
+          const newDate = new Date();
+          newDate.setDate(newDate.getDate() - days);
+          newDate.setHours(0, 0, 0, 0);
+          localStorage.setItem("sober_" + type, newDate.toISOString());
+        }
+      });
+      updateSoberCounters();
+      if (typeof showFeedback === "function") {
+        showFeedback("Sober-Tage übernommen", "success");
+      }
+    });
+</script>
+</body>
+</html>

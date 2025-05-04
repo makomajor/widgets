@@ -249,6 +249,7 @@
       list-style: none;
       padding: 0;
       margin: 0;
+      position: relative;
     }
 
     .day li {
@@ -261,7 +262,6 @@
       border-radius: 6px;
       margin-bottom: 6px;
       transition: background-color 0.3s ease, opacity 0.4s ease, transform 0.3s ease;
-
     }
     .day li.done {
       background-color: #d4edda;
@@ -300,17 +300,7 @@
     }
 
     .drag-placeholder {
-      height: 40px;
-      margin: 6px 0;
-      border-radius: 6px;
-      background: rgba(0, 0, 0, 0.04);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      animation: fadeInPlaceholder 0.2s ease-in-out;
-    }
-
-    body.dark-mode .drag-placeholder {
-      background: rgba(255, 255, 255, 0.05);
-      box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
+      display: none;
     }
 
     @keyframes fadeInPlaceholder {
@@ -486,6 +476,7 @@ function renderWeek() {
     const dayTasks = weekTasks[day] || [];
 
     const dayDiv = document.createElement("div");
+    dayDiv.dataset.day = day;
     dayDiv.className = "day";
     const dateEl = document.createElement("h2");
     dateEl.textContent = dateStr;
@@ -494,58 +485,93 @@ function renderWeek() {
     const ul = document.createElement("ul");
 
     ul.ondragover = e => {
-      // --- Drag placeholder logic ---
+      e.preventDefault();
       const dragging = document.querySelector(".dragging");
-      const afterElement = [...ul.children].find(li => {
-        const box = li.getBoundingClientRect();
-        return e.clientY < box.top + box.height / 2;
-      });
+      if (!dragging) return;
 
-      const existingPlaceholder = ul.querySelector(".drag-placeholder");
-      if (existingPlaceholder) existingPlaceholder.remove();
-
-      const placeholder = document.createElement("li");
-      placeholder.className = "drag-placeholder";
-      if (afterElement) {
-        ul.insertBefore(placeholder, afterElement);
-      } else {
+      let placeholder = ul.querySelector(".drag-placeholder");
+      if (!placeholder) {
+        placeholder = document.createElement("div");
+        placeholder.className = "drag-placeholder";
         ul.appendChild(placeholder);
       }
-      e.preventDefault();
+
+      const mouseY = e.clientY;
+      const children = Array.from(ul.children).filter(el => el !== dragging && el !== placeholder);
+
+      for (const child of children) {
+        const rect = child.getBoundingClientRect();
+        const midpoint = rect.top + rect.height / 2;
+
+        if (mouseY < midpoint) {
+          placeholder.style.top = `${child.offsetTop}px`;
+          return;
+        }
+      }
+
+      // Robusterer Block: untere Hälfte des letzten Elements korrekt behandeln
+      if (children.length > 0) {
+        const last = children[children.length - 1];
+        const rect = last.getBoundingClientRect();
+        const midpoint = rect.top + rect.height / 2;
+
+        if (mouseY >= midpoint) {
+          placeholder.style.top = `${last.offsetTop + last.offsetHeight}px`;
+        } else {
+          placeholder.style.top = `${last.offsetTop}px`;
+        }
+      } else {
+        placeholder.style.top = `0px`;
+      }
     };
     ul.ondragenter = e => {
       e.preventDefault();
+      const container = ul.closest(".day");
+      if (container) container.classList.add("drag-over");
+
       const existing = ul.querySelector(".drag-placeholder");
       if (!existing) {
         const placeholder = document.createElement("li");
         placeholder.className = "drag-placeholder";
         ul.appendChild(placeholder);
       }
-      ul.classList.add("drag-over");
     };
     ul.ondragleave = e => {
       e.preventDefault();
-      ul.classList.remove("drag-over");
+      const container = ul.closest(".day");
+      if (container) container.classList.remove("drag-over");
+
       const placeholder = ul.querySelector(".drag-placeholder");
       if (placeholder) placeholder.remove();
     };
     ul.ondrop = e => {
       e.preventDefault();
+      const container = ul.closest(".day");
+      if (container) container.classList.remove("drag-over");
       ul.classList.remove("drag-over");
-      // Remove all placeholders on drop
-      const placeholders = ul.querySelectorAll(".drag-placeholder");
-      placeholders.forEach(p => p.remove());
+      // Neue, präzisere Variante:
+      const placeholder = ul.querySelector(".drag-placeholder");
+      let insertAt = dayTasks.length;
+
+      if (placeholder) {
+        const placeholderTop = parseFloat(placeholder.style.top);
+        const lis = Array.from(ul.querySelectorAll("li"));
+        const listItems = lis.filter(el => !el.classList.contains("drag-placeholder"));
+        insertAt = listItems.findIndex(el => el.offsetTop >= placeholderTop);
+        if (insertAt === -1) insertAt = listItems.length;
+        placeholder.remove();
+      }
+
       const data = JSON.parse(e.dataTransfer.getData("text/plain"));
-      const draggedTask = tasksByWeek[data.weekKey][data.day].splice(data.index, 1)[0];
+      const isSameList = data.weekKey === weekKey && data.day === day;
 
-      const afterElement = Array.from(ul.children).find(li => {
-        const box = li.getBoundingClientRect();
-        return e.clientY < box.top + box.height / 2;
-      });
+      const draggedTaskList = tasksByWeek[data.weekKey][data.day];
+      const [draggedTask] = draggedTaskList.splice(data.index, 1);
 
-      let insertAt = ul.children.length;
-      if (afterElement) {
-        insertAt = Array.from(ul.children).indexOf(afterElement);
+      // Wenn wir innerhalb derselben Liste sortieren und die neue Position ist nach dem Entfernen "weiter hinten",
+      // müssen wir insertAt um 1 reduzieren.
+      if (isSameList && data.index < insertAt) {
+        insertAt--;
       }
 
       dayTasks.splice(insertAt, 0, draggedTask);
